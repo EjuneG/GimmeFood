@@ -1,0 +1,246 @@
+// 应用状态管理上下文
+
+import React, { useReducer, useEffect } from 'react';
+import {
+  getRestaurants,
+  saveRestaurants,
+  getUserData,
+  saveUserData,
+  getPendingFeedback,
+  savePendingFeedback,
+  shouldShowFeedback
+} from '../utils/storage.js';
+import { ActionTypes } from '../constants/index.js';
+import { AppContext } from './AppContextDef.jsx';
+
+// 应用状态初始值
+const initialState = {
+  // 用户数据
+  user: {
+    isFirstTime: true,
+    setupCompleted: false,
+    totalSelections: 0,
+    preferences: {}
+  },
+
+  // 餐厅数据
+  restaurants: [],
+
+  // 当前选择流程状态
+  currentFlow: {
+    step: 'welcome', // welcome, setup, main, question, mealType, result, reselection, feedback, management
+    selectedQuestion: null,
+    selectedAnswer: null,
+    selectedMealType: null,
+    selectedRestaurant: null,
+    reselectionStep: 0, // 0: initial, 1: reshake, 2: two-options, 3: all-options
+    reselectionOptions: []
+  },
+
+  // 待处理的反馈
+  pendingFeedback: null,
+
+  // UI状态
+  ui: {
+    loading: false,
+    showFeedback: false,
+    showMenu: false
+  }
+};
+
+
+// Reducer函数
+function appReducer(state, action) {
+  switch (action.type) {
+    case ActionTypes.SET_USER_DATA:
+      return {
+        ...state,
+        user: { ...state.user, ...action.payload }
+      };
+
+    case ActionTypes.COMPLETE_SETUP:
+      return {
+        ...state,
+        user: {
+          ...state.user,
+          isFirstTime: false,
+          setupCompleted: true
+        },
+        currentFlow: {
+          ...state.currentFlow,
+          step: 'main'
+        }
+      };
+
+    case ActionTypes.UPDATE_USER_PREFERENCES:
+      return {
+        ...state,
+        user: {
+          ...state.user,
+          preferences: { ...state.user.preferences, ...action.payload }
+        }
+      };
+
+    case ActionTypes.SET_RESTAURANTS:
+      return {
+        ...state,
+        restaurants: action.payload
+      };
+
+    case ActionTypes.ADD_RESTAURANT:
+      return {
+        ...state,
+        restaurants: [...state.restaurants, action.payload]
+      };
+
+    case ActionTypes.UPDATE_RESTAURANT:
+      return {
+        ...state,
+        restaurants: state.restaurants.map(restaurant =>
+          restaurant.id === action.payload.id ? action.payload : restaurant
+        )
+      };
+
+    case ActionTypes.DELETE_RESTAURANT:
+      return {
+        ...state,
+        restaurants: state.restaurants.filter(restaurant => restaurant.id !== action.payload)
+      };
+
+    case ActionTypes.SET_FLOW_STEP:
+      return {
+        ...state,
+        currentFlow: { ...state.currentFlow, step: action.payload }
+      };
+
+    case ActionTypes.SET_SELECTED_QUESTION:
+      return {
+        ...state,
+        currentFlow: { ...state.currentFlow, selectedQuestion: action.payload }
+      };
+
+    case ActionTypes.SET_SELECTED_ANSWER:
+      return {
+        ...state,
+        currentFlow: { ...state.currentFlow, selectedAnswer: action.payload }
+      };
+
+    case ActionTypes.SET_SELECTED_MEAL_TYPE:
+      return {
+        ...state,
+        currentFlow: { ...state.currentFlow, selectedMealType: action.payload }
+      };
+
+    case ActionTypes.SET_SELECTED_RESTAURANT:
+      return {
+        ...state,
+        currentFlow: { ...state.currentFlow, selectedRestaurant: action.payload }
+      };
+
+    case ActionTypes.SET_RESELECTION_STEP:
+      return {
+        ...state,
+        currentFlow: { ...state.currentFlow, reselectionStep: action.payload }
+      };
+
+    case ActionTypes.SET_RESELECTION_OPTIONS:
+      return {
+        ...state,
+        currentFlow: { ...state.currentFlow, reselectionOptions: action.payload }
+      };
+
+    case ActionTypes.RESET_SELECTION_FLOW:
+      return {
+        ...state,
+        currentFlow: {
+          step: 'main',
+          selectedQuestion: null,
+          selectedAnswer: null,
+          selectedMealType: null,
+          selectedRestaurant: null,
+          reselectionStep: 0,
+          reselectionOptions: []
+        }
+      };
+
+    case ActionTypes.SET_PENDING_FEEDBACK:
+      return {
+        ...state,
+        pendingFeedback: action.payload
+      };
+
+    case ActionTypes.CLEAR_PENDING_FEEDBACK:
+      return {
+        ...state,
+        pendingFeedback: null
+      };
+
+    case ActionTypes.SET_LOADING:
+      return {
+        ...state,
+        ui: { ...state.ui, loading: action.payload }
+      };
+
+    case ActionTypes.SET_SHOW_FEEDBACK:
+      return {
+        ...state,
+        ui: { ...state.ui, showFeedback: action.payload }
+      };
+
+    case ActionTypes.SET_SHOW_MENU:
+      return {
+        ...state,
+        ui: { ...state.ui, showMenu: action.payload }
+      };
+
+    default:
+      return state;
+  }
+}
+
+// Context Provider组件
+export function AppProvider({ children }) {
+  const [state, dispatch] = useReducer(appReducer, initialState);
+
+  // 初始化数据
+  useEffect(() => {
+    const userData = getUserData();
+    const restaurants = getRestaurants();
+    const pendingFeedback = getPendingFeedback();
+
+    dispatch({ type: ActionTypes.SET_USER_DATA, payload: userData });
+    dispatch({ type: ActionTypes.SET_RESTAURANTS, payload: restaurants });
+    dispatch({ type: ActionTypes.SET_PENDING_FEEDBACK, payload: pendingFeedback });
+
+    // 确定初始流程步骤 - 临时跳过欢迎屏幕以测试现代UI
+    // if (userData.isFirstTime || restaurants.length === 0) {
+    //   dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'welcome' });
+    // } else if (shouldShowFeedback()) {
+      dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'main' });
+      if (shouldShowFeedback()) {
+        dispatch({ type: ActionTypes.SET_SHOW_FEEDBACK, payload: true });
+      }
+    // } else {
+    //   dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'main' });
+    // }
+  }, []);
+
+  // 保存数据到本地存储的副作用
+  useEffect(() => {
+    saveUserData(state.user);
+  }, [state.user]);
+
+  useEffect(() => {
+    saveRestaurants(state.restaurants);
+  }, [state.restaurants]);
+
+  useEffect(() => {
+    savePendingFeedback(state.pendingFeedback);
+  }, [state.pendingFeedback]);
+
+  return (
+    <AppContext.Provider value={{ state, dispatch, ActionTypes }}>
+      {children}
+    </AppContext.Provider>
+  );
+}
