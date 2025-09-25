@@ -212,8 +212,9 @@ export function handleNegativeFeedback(restaurant) {
 }
 
 // 获取按等级分组的餐厅选择列表 (用于重选流程)
-export function getRestaurantsByTier(restaurants, mealType, maxCount = 5) {
-  const filteredRestaurants = filterRestaurantsByMealType(restaurants, mealType);
+export function getRestaurantsByTier(restaurants, mealType, maxCount = 5, excludeIds = []) {
+  const filteredRestaurants = filterRestaurantsByMealType(restaurants, mealType)
+    .filter(restaurant => !excludeIds.includes(restaurant.id));
 
   // 按等级分组
   const tierGroups = {
@@ -240,4 +241,67 @@ export function getRestaurantsByTier(restaurants, mealType, maxCount = 5) {
   }
 
   return result.slice(0, maxCount);
+}
+
+// 智能餐厅选择算法 - 考虑总餐厅数量来决定是否包含低等级餐厅
+export function intelligentRestaurantSelection(restaurants, mealType, preferences = {}, excludeIds = []) {
+  const filteredRestaurants = filterRestaurantsByMealType(restaurants, mealType)
+    .filter(restaurant => !excludeIds.includes(restaurant.id));
+
+  if (filteredRestaurants.length === 0) return null;
+
+  // 按等级分组
+  const tierGroups = {
+    [TIERS.HANG]: [],
+    [TIERS.TOP]: [],
+    [TIERS.RENSR]: [],
+    [TIERS.NPC]: [],
+    [TIERS.TRASH]: []
+  };
+
+  filteredRestaurants.forEach(restaurant => {
+    if (tierGroups[restaurant.tier]) {
+      tierGroups[restaurant.tier].push(restaurant);
+    }
+  });
+
+  // 根据总餐厅数量决定包含哪些等级
+  let candidateRestaurants = [];
+
+  if (filteredRestaurants.length <= 3) {
+    // 餐厅很少，包含所有等级
+    candidateRestaurants = filteredRestaurants;
+  } else if (filteredRestaurants.length <= 6) {
+    // 餐厅较少，包含前4个等级
+    candidateRestaurants = [
+      ...tierGroups[TIERS.HANG],
+      ...tierGroups[TIERS.TOP],
+      ...tierGroups[TIERS.RENSR],
+      ...tierGroups[TIERS.NPC]
+    ];
+    if (candidateRestaurants.length === 0) {
+      candidateRestaurants = [tierGroups[TIERS.TRASH]];
+    }
+  } else if (filteredRestaurants.length <= 10) {
+    // 餐厅中等数量，包含前3个等级
+    candidateRestaurants = [
+      ...tierGroups[TIERS.HANG],
+      ...tierGroups[TIERS.TOP],
+      ...tierGroups[TIERS.RENSR]
+    ];
+    if (candidateRestaurants.length === 0) {
+      candidateRestaurants = [...tierGroups[TIERS.NPC], ...tierGroups[TIERS.TRASH]];
+    }
+  } else {
+    // 餐厅很多，优先选择高等级餐厅
+    candidateRestaurants = [...tierGroups[TIERS.HANG], ...tierGroups[TIERS.TOP]];
+    if (candidateRestaurants.length === 0) {
+      candidateRestaurants = [...tierGroups[TIERS.RENSR], ...tierGroups[TIERS.NPC]];
+      if (candidateRestaurants.length === 0) {
+        candidateRestaurants = tierGroups[TIERS.TRASH];
+      }
+    }
+  }
+
+  return weightedRandomSelection(candidateRestaurants, preferences);
 }

@@ -175,7 +175,7 @@ export function QuestionScreen() {
           {/* 底部提示 */}
           <div className="mt-8 text-center">
             <p className="text-xs text-gray-500">
-              {question.effect ? '这个选择会影响推荐结果' : '纯心理作用，选择你的直觉'}
+              选择你的直觉，让魔法发生
             </p>
           </div>
         </div>

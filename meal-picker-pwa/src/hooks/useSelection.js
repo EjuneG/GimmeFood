@@ -4,7 +4,7 @@ import { useApp } from './useApp.js';
 import { useRestaurants } from './useRestaurants.js';
 import {
   getRandomAbstractQuestion,
-  weightedRandomSelection,
+  intelligentRestaurantSelection,
   filterRestaurantsByMealType,
   handleRestaurantRejection,
   handlePositiveFeedback,
@@ -61,6 +61,12 @@ export function useSelection() {
     // 进行餐厅推荐
     const recommendation = recommendRestaurant(mealType);
     if (recommendation) {
+      // 记录初始推荐的餐厅
+      dispatch({
+        type: ActionTypes.ADD_SHOWN_RESTAURANT,
+        payload: recommendation.id
+      });
+
       dispatch({
         type: ActionTypes.SET_SELECTED_RESTAURANT,
         payload: recommendation
@@ -74,11 +80,13 @@ export function useSelection() {
   };
 
   // 推荐餐厅
-  const recommendRestaurant = (mealType) => {
-    const suitableRestaurants = filterRestaurantsByMealType(state.restaurants, mealType);
-    if (suitableRestaurants.length === 0) return null;
-
-    return weightedRandomSelection(suitableRestaurants, state.user.preferences);
+  const recommendRestaurant = (mealType, excludeIds = []) => {
+    return intelligentRestaurantSelection(
+      state.restaurants,
+      mealType,
+      state.user.preferences,
+      excludeIds
+    );
   };
 
   // 接受推荐
@@ -143,10 +151,19 @@ export function useSelection() {
 
   // 重新摇号 - 单一选项
   const rerollSingleOption = () => {
-    const { selectedMealType } = state.currentFlow;
-    const newRecommendation = recommendRestaurant(selectedMealType);
+    const { selectedMealType, selectedRestaurant, shownRestaurantIds = [] } = state.currentFlow;
+
+    // 排除已经显示过的餐厅
+    const excludeIds = [...shownRestaurantIds, selectedRestaurant?.id].filter(Boolean);
+    const newRecommendation = recommendRestaurant(selectedMealType, excludeIds);
 
     if (newRecommendation) {
+      // 更新已显示的餐厅列表
+      dispatch({
+        type: ActionTypes.ADD_SHOWN_RESTAURANT,
+        payload: newRecommendation.id
+      });
+
       dispatch({
         type: ActionTypes.SET_SELECTED_RESTAURANT,
         payload: newRecommendation
@@ -156,8 +173,21 @@ export function useSelection() {
 
   // 提供两个选项
   const provideTwoOptions = () => {
-    const { selectedMealType } = state.currentFlow;
-    const topOptions = getRestaurantsByTier(state.restaurants, selectedMealType, 2);
+    const { selectedMealType, shownRestaurantIds = [] } = state.currentFlow;
+    const topOptions = getRestaurantsByTier(
+      state.restaurants,
+      selectedMealType,
+      2,
+      shownRestaurantIds
+    );
+
+    // 更新已显示的餐厅列表
+    topOptions.forEach(restaurant => {
+      dispatch({
+        type: ActionTypes.ADD_SHOWN_RESTAURANT,
+        payload: restaurant.id
+      });
+    });
 
     dispatch({
       type: ActionTypes.SET_RESELECTION_OPTIONS,
@@ -167,8 +197,13 @@ export function useSelection() {
 
   // 提供所有选项
   const provideAllOptions = () => {
-    const { selectedMealType } = state.currentFlow;
-    const allOptions = getRestaurantsByTier(state.restaurants, selectedMealType, 10);
+    const { selectedMealType, shownRestaurantIds = [] } = state.currentFlow;
+    const allOptions = getRestaurantsByTier(
+      state.restaurants,
+      selectedMealType,
+      10,
+      shownRestaurantIds
+    );
 
     dispatch({
       type: ActionTypes.SET_RESELECTION_OPTIONS,
@@ -181,6 +216,10 @@ export function useSelection() {
     dispatch({
       type: ActionTypes.SET_SELECTED_RESTAURANT,
       payload: restaurant
+    });
+    dispatch({
+      type: ActionTypes.SET_RESELECTION_STEP,
+      payload: 0
     });
     dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'result' });
   };

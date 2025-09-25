@@ -34,7 +34,8 @@ const initialState = {
     selectedMealType: null,
     selectedRestaurant: null,
     reselectionStep: 0, // 0: initial, 1: reshake, 2: two-options, 3: all-options
-    reselectionOptions: []
+    reselectionOptions: [],
+    shownRestaurantIds: [] // 记录在当前选择流程中已显示的餐厅ID
   },
 
   // 待处理的反馈
@@ -149,6 +150,15 @@ function appReducer(state, action) {
         currentFlow: { ...state.currentFlow, reselectionOptions: action.payload }
       };
 
+    case ActionTypes.ADD_SHOWN_RESTAURANT:
+      return {
+        ...state,
+        currentFlow: {
+          ...state.currentFlow,
+          shownRestaurantIds: [...new Set([...state.currentFlow.shownRestaurantIds, action.payload])]
+        }
+      };
+
     case ActionTypes.RESET_SELECTION_FLOW:
       return {
         ...state,
@@ -159,7 +169,8 @@ function appReducer(state, action) {
           selectedMealType: null,
           selectedRestaurant: null,
           reselectionStep: 0,
-          reselectionOptions: []
+          reselectionOptions: [],
+          shownRestaurantIds: []
         }
       };
 
