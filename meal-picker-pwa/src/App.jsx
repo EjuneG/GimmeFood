@@ -2,6 +2,7 @@ import React from 'react';
 import './App.css';
 import { AppProvider } from './contexts/AppContext.jsx';
 import { useApp } from './hooks/useApp.js';
+import { useServiceWorker } from './hooks/useServiceWorker.js';
 import { WelcomeScreen } from './components/WelcomeScreen.jsx';
 import { MainScreen } from './components/MainScreen.jsx';
 import { QuestionScreen } from './components/QuestionScreen.jsx';
@@ -9,6 +10,7 @@ import { ResultScreen } from './components/ResultScreen.jsx';
 import { RestaurantForm } from './components/RestaurantForm.jsx';
 import { ManagementScreen } from './components/ManagementScreen.jsx';
 import { FeedbackModal, FeedbackBanner } from './components/FeedbackModal.jsx';
+import { UpdateBanner } from './components/UpdateNotification.jsx';
 import { BottomTabNavigation } from './components/BottomTabNavigation.jsx';
 import { useRestaurants } from './hooks/useRestaurants.js';
 import { ActionTypes } from './constants/index.js';
@@ -73,11 +75,18 @@ function AppRouter() {
 }
 
 function App() {
+  const { updateAvailable, isUpdating, updateApp } = useServiceWorker();
+
   return (
     <AppProvider>
       <div className="App">
         <AppRouter />
         <BottomTabNavigation />
+        <UpdateBanner
+          updateAvailable={updateAvailable}
+          isUpdating={isUpdating}
+          onUpdate={updateApp}
+        />
       </div>
     </AppProvider>
   );
