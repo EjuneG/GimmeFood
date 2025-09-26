@@ -5,11 +5,11 @@ import { useRestaurants } from './useRestaurants.js';
 import {
   getRandomAbstractQuestion,
   intelligentRestaurantSelection,
-  filterRestaurantsByMealType,
   handleRestaurantRejection,
   handlePositiveFeedback,
   handleNegativeFeedback,
-  getRestaurantsByTier
+  getRestaurantsByTier,
+  adjustRestaurantWeight
 } from '../utils/algorithm.js';
 import { addSelectionRecord } from '../utils/storage.js';
 
@@ -132,8 +132,15 @@ export function useSelection() {
 
   // 开始重选流程
   const startReselection = () => {
-    const nextStep = state.currentFlow.reselectionStep + 1;
+    const { selectedRestaurant, reselectionStep } = state.currentFlow;
+    const nextStep = reselectionStep + 1;
     dispatch({ type: ActionTypes.SET_RESELECTION_STEP, payload: nextStep });
+
+    // 对当前餐厅应用权重惩罚（步骤1和2）
+    if (selectedRestaurant && (nextStep === 1 || nextStep === 2)) {
+      const adjustedRestaurant = adjustRestaurantWeight(selectedRestaurant, -0.5);
+      updateRestaurant(selectedRestaurant.id, adjustedRestaurant);
+    }
 
     if (nextStep === 1) {
       // 步骤1：重新摇号 - 提供新的单一选项
@@ -195,6 +202,22 @@ export function useSelection() {
     });
   };
 
+  // 处理步骤2中用户选择跳过两个选项的情况
+  const skipTwoOptions = () => {
+    const { reselectionOptions } = state.currentFlow;
+
+    // 对两个选项都应用权重惩罚
+    if (reselectionOptions && reselectionOptions.length === 2) {
+      reselectionOptions.forEach(restaurant => {
+        const adjustedRestaurant = adjustRestaurantWeight(restaurant, -0.5);
+        updateRestaurant(restaurant.id, adjustedRestaurant);
+      });
+    }
+
+    // 继续到步骤3
+    startReselection();
+  };
+
   // 提供所有选项
   const provideAllOptions = () => {
     const { selectedMealType, shownRestaurantIds = [] } = state.currentFlow;
@@ -213,6 +236,17 @@ export function useSelection() {
 
   // 从重选选项中选择餐厅
   const selectFromReselectionOptions = (restaurant) => {
+    const { reselectionOptions, reselectionStep } = state.currentFlow;
+
+    // 如果是步骤2（两个选项），对未选中的餐厅应用权重惩罚
+    if (reselectionStep === 2 && reselectionOptions && reselectionOptions.length === 2) {
+      const nonSelectedRestaurant = reselectionOptions.find(r => r.id !== restaurant.id);
+      if (nonSelectedRestaurant) {
+        const adjustedRestaurant = adjustRestaurantWeight(nonSelectedRestaurant, -0.5);
+        updateRestaurant(nonSelectedRestaurant.id, adjustedRestaurant);
+      }
+    }
+
     dispatch({
       type: ActionTypes.SET_SELECTED_RESTAURANT,
       payload: restaurant
@@ -280,6 +314,7 @@ export function useSelection() {
     rejectRecommendation,
     startReselection,
     selectFromReselectionOptions,
+    skipTwoOptions,
     submitFeedback,
     skipFeedback,
     resetFlow

@@ -4,18 +4,16 @@ import React, { useState } from 'react';
 import { useApp } from '../hooks/useApp.js';
 import { useRestaurants } from '../hooks/useRestaurants.js';
 import { RestaurantForm } from './RestaurantForm.jsx';
+import { DataManagement } from './DataManagement.jsx';
 import { TIER_NAMES, MEAL_TYPE_NAMES } from '../utils/storage.js';
 
 export function ManagementScreen() {
-  const { dispatch, ActionTypes } = useApp();
+  const { ActionTypes } = useApp();
   const { restaurants, deleteRestaurant, updateRestaurant, addRestaurant } = useRestaurants();
   const [currentView, setCurrentView] = useState('list'); // list, add, edit
   const [editingRestaurant, setEditingRestaurant] = useState(null);
+  const [showDataManagement, setShowDataManagement] = useState(false);
 
-  // 返回主界面
-  const goBack = () => {
-    dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'main' });
-  };
 
   // 添加餐厅
   const handleAddRestaurant = () => {
@@ -78,7 +76,16 @@ export function ManagementScreen() {
             <h1 className="text-2xl font-bold">餐厅管理</h1>
             <p className="text-purple-100 mt-1">管理你的餐厅选项和偏好</p>
           </div>
-          <div className="text-4xl">🏪</div>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setShowDataManagement(true)}
+              className="p-2 bg-white/10 backdrop-blur-sm rounded-lg hover:bg-white/20 transition-colors"
+              title="数据管理"
+            >
+              <span className="text-lg">⚙️</span>
+            </button>
+            <div className="text-4xl">🏪</div>
+          </div>
         </div>
 
         {/* 统计卡片 */}
@@ -232,6 +239,12 @@ export function ManagementScreen() {
         {/* 底部间距 */}
         <div className="h-4"></div>
       </div>
+
+      {/* 数据管理弹窗 */}
+      <DataManagement
+        isOpen={showDataManagement}
+        onClose={() => setShowDataManagement(false)}
+      />
     </div>
   );
 }

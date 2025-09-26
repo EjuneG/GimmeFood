@@ -7,7 +7,7 @@ import { TIER_NAMES, MEAL_TYPE_NAMES } from '../utils/storage.js';
 
 export function ResultScreen() {
   const { state } = useApp();
-  const { acceptRecommendation, startReselection, selectFromReselectionOptions } = useSelection();
+  const { acceptRecommendation, startReselection, selectFromReselectionOptions, skipTwoOptions } = useSelection();
   const [showAnimation, setShowAnimation] = useState(true);
 
   const { selectedRestaurant, selectedMealType, reselectionStep, reselectionOptions } = state.currentFlow;
@@ -149,7 +149,7 @@ export function ResultScreen() {
                 ))}
 
                 <button
-                  onClick={startReselection}
+                  onClick={skipTwoOptions}
                   className="w-full py-3 px-4 bg-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-400 transition-colors mt-4"
                 >
                   {buttonText}

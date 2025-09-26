@@ -52,7 +52,9 @@ export function getRandomAbstractQuestion() {
 
 // 计算餐厅的当前权重
 export function calculateRestaurantWeight(restaurant, preferences = {}) {
-  let weight = TIER_WEIGHTS[restaurant.tier] || 1;
+  let baseWeight = TIER_WEIGHTS[restaurant.tier] || 1;
+  let dynamicWeight = restaurant.dynamicWeight || 0;
+  let weight = baseWeight + dynamicWeight;
 
   // 最近选择惩罚 - 如果在最近24小时内选择过，临时降级
   const lastSelected = restaurant.lastSelected;
@@ -124,34 +126,85 @@ export function filterRestaurantsByMealType(restaurants, mealType) {
   );
 }
 
-// 处理餐厅拒绝 - 降级处理
-export function handleRestaurantRejection(restaurant) {
+// 调整餐厅权重
+export function adjustRestaurantWeight(restaurant, adjustment) {
   const updatedRestaurant = { ...restaurant };
-  updatedRestaurant.rejectionCount = (updatedRestaurant.rejectionCount || 0) + 1;
+  updatedRestaurant.dynamicWeight = (restaurant.dynamicWeight || 0) + adjustment;
 
-  // 根据当前等级进行降级
-  switch (updatedRestaurant.tier) {
-    case TIERS.HANG:
-      updatedRestaurant.tier = TIERS.TOP;
-      break;
-    case TIERS.TOP:
-      updatedRestaurant.tier = TIERS.RENSR;
-      break;
-    case TIERS.RENSR:
-      updatedRestaurant.tier = TIERS.NPC;
-      break;
-    case TIERS.NPC:
-      updatedRestaurant.tier = TIERS.TRASH;
-      break;
-    case TIERS.TRASH:
-      // 已经是最低等级，不再降级
-      break;
+  // 检查是否需要转换为等级变化
+  return convertWeightToTierChange(updatedRestaurant);
+}
+
+// 将权重变化转换为等级变化
+export function convertWeightToTierChange(restaurant) {
+  const updatedRestaurant = { ...restaurant };
+  const dynamicWeight = updatedRestaurant.dynamicWeight || 0;
+
+  // 权重降低1.0或更多时降级
+  if (dynamicWeight <= -1.0) {
+    const tierDowngrades = Math.floor(Math.abs(dynamicWeight));
+    for (let i = 0; i < tierDowngrades; i++) {
+      switch (updatedRestaurant.tier) {
+        case TIERS.HANG:
+          updatedRestaurant.tier = TIERS.TOP;
+          break;
+        case TIERS.TOP:
+          updatedRestaurant.tier = TIERS.RENSR;
+          break;
+        case TIERS.RENSR:
+          updatedRestaurant.tier = TIERS.NPC;
+          break;
+        case TIERS.NPC:
+          updatedRestaurant.tier = TIERS.TRASH;
+          break;
+        case TIERS.TRASH:
+          // 已经是最低等级，不再降级
+          break;
+      }
+    }
+    // 重置动态权重，保留余数
+    updatedRestaurant.dynamicWeight = dynamicWeight + tierDowngrades;
+  }
+
+  // 权重提升1.0或更多时升级
+  else if (dynamicWeight >= 1.0) {
+    const tierUpgrades = Math.floor(dynamicWeight);
+    for (let i = 0; i < tierUpgrades; i++) {
+      switch (updatedRestaurant.tier) {
+        case TIERS.TRASH:
+          updatedRestaurant.tier = TIERS.NPC;
+          break;
+        case TIERS.NPC:
+          updatedRestaurant.tier = TIERS.RENSR;
+          break;
+        case TIERS.RENSR:
+          updatedRestaurant.tier = TIERS.TOP;
+          break;
+        case TIERS.TOP:
+          updatedRestaurant.tier = TIERS.HANG;
+          break;
+        case TIERS.HANG:
+          // 已经是最高等级，不再升级
+          break;
+      }
+    }
+    // 重置动态权重，保留余数
+    updatedRestaurant.dynamicWeight = dynamicWeight - tierUpgrades;
   }
 
   return updatedRestaurant;
 }
 
-// 处理正面反馈 - 可能升级
+// 处理餐厅拒绝 - 使用新的权重系统
+export function handleRestaurantRejection(restaurant) {
+  const updatedRestaurant = { ...restaurant };
+  updatedRestaurant.rejectionCount = (updatedRestaurant.rejectionCount || 0) + 1;
+
+  // 使用权重调整系统进行降级
+  return adjustRestaurantWeight(updatedRestaurant, -1.0);
+}
+
+// 处理正面反馈 - 使用新的权重系统
 export function handlePositiveFeedback(restaurant) {
   const updatedRestaurant = { ...restaurant };
 
@@ -170,30 +223,14 @@ export function handlePositiveFeedback(restaurant) {
     .slice(-3) // 最近3次反馈
     .filter(f => f.feedback === 'positive');
 
-  if (recentFeedback.length >= 2) { // 最近2次都是正面反馈才升级
-    switch (updatedRestaurant.tier) {
-      case TIERS.TRASH:
-        updatedRestaurant.tier = TIERS.NPC;
-        break;
-      case TIERS.NPC:
-        updatedRestaurant.tier = TIERS.RENSR;
-        break;
-      case TIERS.RENSR:
-        updatedRestaurant.tier = TIERS.TOP;
-        break;
-      case TIERS.TOP:
-        updatedRestaurant.tier = TIERS.HANG;
-        break;
-      case TIERS.HANG:
-        // 已经是最高等级，不再升级
-        break;
-    }
+  if (recentFeedback.length >= 2) { // 最近2次都是正面反馈才给予权重提升
+    return adjustRestaurantWeight(updatedRestaurant, 0.5);
   }
 
   return updatedRestaurant;
 }
 
-// 处理负面反馈 - 降级
+// 处理负面反馈 - 使用新的权重系统
 export function handleNegativeFeedback(restaurant) {
   const updatedRestaurant = { ...restaurant };
 
@@ -207,8 +244,8 @@ export function handleNegativeFeedback(restaurant) {
     timestamp: new Date().toISOString()
   });
 
-  // 立即降级
-  return handleRestaurantRejection(updatedRestaurant);
+  // 使用权重调整系统进行降级
+  return adjustRestaurantWeight(updatedRestaurant, -1.0);
 }
 
 // 获取按等级分组的餐厅选择列表 (用于重选流程)
