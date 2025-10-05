@@ -49,9 +49,9 @@ exports.handler = async (event) => {
       };
     }
 
-    // 调用 Gemini API
+    // 调用 Gemini API (使用最新的 gemini-1.5-flash 模型)
     const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,12 +96,31 @@ exports.handler = async (event) => {
     const geminiData = await geminiResponse.json();
     console.log('Gemini API response:', JSON.stringify(geminiData, null, 2));
 
+    // 检查是否有安全过滤或其他阻止
+    if (geminiData.promptFeedback?.blockReason) {
+      console.error('Content blocked:', geminiData.promptFeedback);
+      throw new Error(`内容被过滤: ${geminiData.promptFeedback.blockReason}`);
+    }
+
     // 解析 Gemini 返回的内容
-    const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+    const candidate = geminiData.candidates?.[0];
+
+    if (!candidate) {
+      console.error('No candidates in response:', geminiData);
+      throw new Error('Gemini API 未返回结果');
+    }
+
+    // 检查候选结果是否被过滤
+    if (candidate.finishReason === 'SAFETY') {
+      console.error('Response filtered for safety:', candidate);
+      throw new Error('内容安全过滤');
+    }
+
+    const responseText = candidate.content?.parts?.[0]?.text;
 
     if (!responseText) {
-      console.error('No response text from Gemini:', geminiData);
-      throw new Error('Gemini API 返回格式错误');
+      console.error('No response text from Gemini. Candidate:', JSON.stringify(candidate));
+      throw new Error('Gemini API 返回格式错误 - 无文本内容');
     }
 
     console.log('Extracted text:', responseText);
