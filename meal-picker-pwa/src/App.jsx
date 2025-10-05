@@ -5,7 +5,6 @@ import { useApp } from './hooks/useApp.js';
 import { useServiceWorker } from './hooks/useServiceWorker.js';
 import { WelcomeScreen } from './components/WelcomeScreen.jsx';
 import { MainScreen } from './components/MainScreen.jsx';
-import { QuestionScreen } from './components/QuestionScreen.jsx';
 import { ResultScreen } from './components/ResultScreen.jsx';
 import { RestaurantForm } from './components/RestaurantForm.jsx';
 import { ManagementScreen } from './components/ManagementScreen.jsx';
@@ -51,13 +50,6 @@ function AppRouter() {
           <FeedbackModal />
         </>
       );
-
-    case 'question':
-      return <QuestionScreen />;
-
-    case 'mealType':
-      // 这个状态已经在QuestionScreen中处理
-      return <QuestionScreen />;
 
     case 'result':
       return <ResultScreen />;

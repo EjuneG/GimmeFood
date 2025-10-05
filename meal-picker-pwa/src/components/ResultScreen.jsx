@@ -195,6 +195,10 @@ export function ResultScreen() {
     );
   }
 
+  // 随机趣味文案
+  const funTexts = ['今天就吃它！', '为你精选～', '随机推荐！'];
+  const randomFunText = funTexts[Math.floor(Math.random() * funTexts.length)];
+
   // 初始推荐结果界面
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4">
@@ -204,7 +208,7 @@ export function ResultScreen() {
           <div className="text-center mb-6">
             <div className="text-6xl mb-4">🎉</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              为你推荐
+              {randomFunText}
             </h2>
             <p className="text-gray-600">
               基于你的偏好和历史记录

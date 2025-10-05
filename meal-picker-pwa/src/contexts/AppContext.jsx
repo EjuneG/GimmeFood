@@ -28,9 +28,7 @@ const initialState = {
 
   // 当前选择流程状态
   currentFlow: {
-    step: 'welcome', // welcome, setup, main, question, mealType, result, reselection, feedback, management
-    selectedQuestion: null,
-    selectedAnswer: null,
+    step: 'welcome', // welcome, setup, main, result, reselection, feedback, management
     selectedMealType: null,
     selectedRestaurant: null,
     reselectionStep: 0, // 0: initial, 1: reshake, 2: two-options, 3: all-options
@@ -114,18 +112,6 @@ function appReducer(state, action) {
         currentFlow: { ...state.currentFlow, step: action.payload }
       };
 
-    case ActionTypes.SET_SELECTED_QUESTION:
-      return {
-        ...state,
-        currentFlow: { ...state.currentFlow, selectedQuestion: action.payload }
-      };
-
-    case ActionTypes.SET_SELECTED_ANSWER:
-      return {
-        ...state,
-        currentFlow: { ...state.currentFlow, selectedAnswer: action.payload }
-      };
-
     case ActionTypes.SET_SELECTED_MEAL_TYPE:
       return {
         ...state,
@@ -164,8 +150,6 @@ function appReducer(state, action) {
         ...state,
         currentFlow: {
           step: 'main',
-          selectedQuestion: null,
-          selectedAnswer: null,
           selectedMealType: null,
           selectedRestaurant: null,
           reselectionStep: 0,
