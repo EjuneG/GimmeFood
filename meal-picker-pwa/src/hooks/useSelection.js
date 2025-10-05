@@ -96,9 +96,8 @@ export function useSelection() {
         }
       });
 
-      // 返回主界面
-      dispatch({ type: ActionTypes.RESET_SELECTION_FLOW });
-      alert(`好的！去吃 ${selectedRestaurant.name} 吧！🍽️`);
+      // 显示营养记录提示（新增功能）
+      dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'nutrition_prompt' });
     }
   };
 

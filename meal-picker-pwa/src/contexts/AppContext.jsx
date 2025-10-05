@@ -28,12 +28,18 @@ const initialState = {
 
   // 当前选择流程状态
   currentFlow: {
-    step: 'welcome', // welcome, setup, main, result, reselection, feedback, management
+    step: 'welcome', // welcome, setup, main, result, reselection, feedback, management, nutrition_prompt, nutrition_input, nutrition_result
     selectedMealType: null,
     selectedRestaurant: null,
     reselectionStep: 0, // 0: initial, 1: reshake, 2: two-options, 3: all-options
     reselectionOptions: [],
     shownRestaurantIds: [] // 记录在当前选择流程中已显示的餐厅ID
+  },
+
+  // 营养分析状态
+  nutrition: {
+    currentAnalysis: null, // 当前分析结果
+    foodDescription: '' // 用户输入的食物描述
   },
 
   // 待处理的反馈
@@ -155,6 +161,10 @@ function appReducer(state, action) {
           reselectionStep: 0,
           reselectionOptions: [],
           shownRestaurantIds: []
+        },
+        nutrition: {
+          currentAnalysis: null,
+          foodDescription: ''
         }
       };
 
@@ -186,6 +196,33 @@ function appReducer(state, action) {
       return {
         ...state,
         ui: { ...state.ui, showMenu: action.payload }
+      };
+
+    case ActionTypes.SET_NUTRITION_DATA:
+      return {
+        ...state,
+        nutrition: {
+          ...state.nutrition,
+          currentAnalysis: action.payload
+        }
+      };
+
+    case ActionTypes.CLEAR_NUTRITION_DATA:
+      return {
+        ...state,
+        nutrition: {
+          currentAnalysis: null,
+          foodDescription: ''
+        }
+      };
+
+    case ActionTypes.SET_FOOD_DESCRIPTION:
+      return {
+        ...state,
+        nutrition: {
+          ...state.nutrition,
+          foodDescription: action.payload
+        }
       };
 
     default:

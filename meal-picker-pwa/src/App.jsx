@@ -11,6 +11,9 @@ import { ManagementScreen } from './components/ManagementScreen.jsx';
 import { FeedbackModal, FeedbackBanner } from './components/FeedbackModal.jsx';
 import { UpdateBanner } from './components/UpdateNotification.jsx';
 import { BottomTabNavigation } from './components/BottomTabNavigation.jsx';
+import { NutritionPrompt } from './components/NutritionPrompt.jsx';
+import { NutritionInput } from './components/NutritionInput.jsx';
+import { NutritionResult } from './components/NutritionResult.jsx';
 import { useRestaurants } from './hooks/useRestaurants.js';
 import { ActionTypes } from './constants/index.js';
 
@@ -60,6 +63,15 @@ function AppRouter() {
 
     case 'management':
       return <ManagementScreen />;
+
+    case 'nutrition_prompt':
+      return <NutritionPrompt />;
+
+    case 'nutrition_input':
+      return <NutritionInput />;
+
+    case 'nutrition_result':
+      return <NutritionResult />;
 
     default:
       return <MainScreen />;
