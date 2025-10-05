@@ -80,8 +80,8 @@ exports.handler = async (event) => {
           generationConfig: {
             temperature: 0.3,
             topK: 1,
-            topP: 1,
-            maxOutputTokens: 256,
+            topP: 1
+            // No maxOutputTokens limit - let gemini-2.5-flash use what it needs for thinking + response
           }
         })
       }
