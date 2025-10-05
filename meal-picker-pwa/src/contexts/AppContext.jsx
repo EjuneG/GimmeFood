@@ -10,6 +10,10 @@ import {
   savePendingFeedback,
   shouldShowFeedback
 } from '../utils/storage.js';
+import {
+  getNutritionGoal,
+  saveNutritionGoal as saveGoalToStorage
+} from '../utils/nutritionGoalStorage.js';
 import { ActionTypes } from '../constants/index.js';
 import { AppContext } from './AppContextDef.jsx';
 
@@ -41,6 +45,9 @@ const initialState = {
     currentAnalysis: null, // 当前分析结果
     foodDescription: '' // 用户输入的食物描述
   },
+
+  // 营养目标
+  nutritionGoal: null, // {calories, protein, carbs, fat, note, updatedAt}
 
   // 待处理的反馈
   pendingFeedback: null,
@@ -225,6 +232,18 @@ function appReducer(state, action) {
         }
       };
 
+    case ActionTypes.SET_NUTRITION_GOAL:
+      return {
+        ...state,
+        nutritionGoal: action.payload
+      };
+
+    case ActionTypes.CLEAR_NUTRITION_GOAL:
+      return {
+        ...state,
+        nutritionGoal: null
+      };
+
     default:
       return state;
   }
@@ -239,10 +258,14 @@ export function AppProvider({ children }) {
     const userData = getUserData();
     const restaurants = getRestaurants();
     const pendingFeedback = getPendingFeedback();
+    const nutritionGoal = getNutritionGoal();
 
     dispatch({ type: ActionTypes.SET_USER_DATA, payload: userData });
     dispatch({ type: ActionTypes.SET_RESTAURANTS, payload: restaurants });
     dispatch({ type: ActionTypes.SET_PENDING_FEEDBACK, payload: pendingFeedback });
+    if (nutritionGoal) {
+      dispatch({ type: ActionTypes.SET_NUTRITION_GOAL, payload: nutritionGoal });
+    }
 
     // 确定初始流程步骤 - 临时跳过欢迎屏幕以测试现代UI
     // if (userData.isFirstTime || restaurants.length === 0) {
@@ -269,6 +292,12 @@ export function AppProvider({ children }) {
   useEffect(() => {
     savePendingFeedback(state.pendingFeedback);
   }, [state.pendingFeedback]);
+
+  useEffect(() => {
+    if (state.nutritionGoal) {
+      saveGoalToStorage(state.nutritionGoal);
+    }
+  }, [state.nutritionGoal]);
 
   return (
     <AppContext.Provider value={{ state, dispatch, ActionTypes }}>

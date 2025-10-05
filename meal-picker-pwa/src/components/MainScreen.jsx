@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useApp } from '../hooks/useApp.js';
 import { useSelection } from '../hooks/useSelection.js';
 import { MEAL_TYPE_NAMES, MEAL_TYPES, TIER_NAMES } from '../utils/storage.js';
+import { NutritionGoalCard } from './NutritionGoalCard.jsx';
 
 export function MainScreen() {
   const { state, dispatch, ActionTypes } = useApp();
@@ -120,34 +121,12 @@ export function MainScreen() {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* 头部卡片 */}
       <div className="bg-gradient-to-br from-blue-600 to-purple-700 text-white px-6 pt-12 pb-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">给我食物!</h1>
             <p className="text-blue-100 mt-1">{getGreeting()}，准备好选择了吗？</p>
           </div>
           <div className="text-4xl">🍽️</div>
-        </div>
-
-        {/* 统计卡片 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-          <div className="flex justify-between text-center">
-            <div>
-              <div className="text-2xl font-bold">{state.restaurants.length}</div>
-              <div className="text-xs text-blue-100">餐厅选项</div>
-            </div>
-            <div className="w-px bg-white/20"></div>
-            <div>
-              <div className="text-2xl font-bold">{state.user.preferences?.totalSelections || 0}</div>
-              <div className="text-xs text-blue-100">总选择次数</div>
-            </div>
-            <div className="w-px bg-white/20"></div>
-            <div>
-              <div className="text-2xl font-bold">{
-                state.restaurants.filter(r => r.tier === 'hàng').length
-              }</div>
-              <div className="text-xs text-blue-100">夯级餐厅</div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -155,11 +134,6 @@ export function MainScreen() {
       <div className="px-4 -mt-4 space-y-4">
         {/* 主要操作卡片 */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">准备好消除选择疲劳了吗？</h2>
-            <p className="text-gray-600 text-sm">点击下方按钮，让算法为你选择最适合的餐厅</p>
-          </div>
-
           {/* 大号给我食物按钮 */}
           <button
             data-gimme-food-btn
@@ -179,34 +153,24 @@ export function MainScreen() {
           </button>
         </div>
 
-        {/* 快速操作卡片 */}
-        {state.restaurants.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4">
-            {/* 最近餐厅 */}
-            <div className="bg-white rounded-2xl shadow-sm p-4">
-              <div className="text-center">
-                <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-2">
-                  <span className="text-lg">⭐</span>
-                </div>
-                <h3 className="font-semibold text-sm text-gray-900">最爱餐厅</h3>
-                <p className="text-xs text-gray-600 mt-1">
-                  {state.restaurants.filter(r => r.tier === 'hàng').length} 家夯级
-                </p>
-              </div>
-            </div>
+        {/* 营养目标卡片 */}
+        <NutritionGoalCard />
 
-            {/* 今日推荐 */}
-            <div className="bg-white rounded-2xl shadow-sm p-4">
-              <div className="text-center">
-                <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-2">
-                  <span className="text-lg">📅</span>
-                </div>
-                <h3 className="font-semibold text-sm text-gray-900">今日建议</h3>
-                <p className="text-xs text-gray-600 mt-1">
-                  {MEAL_TYPE_NAMES[getRecommendedMealType()]}时间
-                </p>
+        {/* 手动选择按钮 */}
+        {state.restaurants.length > 0 ? (
+          <div className="bg-white rounded-2xl shadow-sm p-4">
+            <button
+              onClick={() => dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'manual_selection' })}
+              className="w-full py-4 px-6 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl font-bold text-lg hover:from-green-600 hover:to-teal-700 transition-all transform hover:scale-105 shadow-md"
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <span className="text-2xl">🍽️</span>
+                <span>手动选择餐厅</span>
               </div>
-            </div>
+            </button>
+            <p className="text-xs text-gray-500 text-center mt-2">
+              直接选择餐厅并记录营养
+            </p>
           </div>
         ) : (
           // 空状态卡片
@@ -224,25 +188,6 @@ export function MainScreen() {
             </button>
           </div>
         )}
-
-        {/* 功能说明卡片 */}
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-4 border border-indigo-100">
-          <h3 className="font-semibold text-gray-900 mb-3">智能推荐系统</h3>
-          <div className="space-y-2 text-sm text-gray-700">
-            <div className="flex items-center space-x-2">
-              <span className="text-green-500">✓</span>
-              <span>基于餐厅等级智能权重分配</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-green-500">✓</span>
-              <span>避免重复选择相同餐厅</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-green-500">✓</span>
-              <span>根据反馈自动调整推荐</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
