@@ -60,11 +60,20 @@ export function NutritionInput() {
         // 跳转到结果页面
         dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'nutrition_result' });
       } else {
-        setError(result.error || '分析失败，请重试');
+        // 显示详细错误信息
+        console.error('API Error:', result);
+        const errorMsg = result.error || '分析失败，请重试';
+        const details = result.details ? `\n详情: ${result.details}` : '';
+        setError(errorMsg + details);
       }
     } catch (err) {
       console.error('Nutrition analysis error:', err);
-      setError('网络错误，请检查连接');
+      console.error('Error details:', {
+        message: err.message,
+        response: response,
+        status: response?.status
+      });
+      setError(`网络错误: ${err.message || '请检查连接'}`);
     } finally {
       setLoading(false);
     }

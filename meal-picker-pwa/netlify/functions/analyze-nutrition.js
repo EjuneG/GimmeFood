@@ -25,11 +25,27 @@ exports.handler = async (event) => {
   try {
     const { foodDescription } = JSON.parse(event.body);
 
+    console.log('Nutrition analysis request:', { foodDescription });
+
     if (!foodDescription || foodDescription.trim().length === 0) {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ error: '请输入食物描述' })
+      };
+    }
+
+    // 检查 API Key
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY not configured');
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'API配置错误',
+          details: 'GEMINI_API_KEY 未设置'
+        })
       };
     }
 
@@ -71,14 +87,24 @@ exports.handler = async (event) => {
       }
     );
 
+    if (!geminiResponse.ok) {
+      const errorText = await geminiResponse.text();
+      console.error('Gemini API error:', geminiResponse.status, errorText);
+      throw new Error(`Gemini API 错误: ${geminiResponse.status} - ${errorText}`);
+    }
+
     const geminiData = await geminiResponse.json();
+    console.log('Gemini API response:', JSON.stringify(geminiData, null, 2));
 
     // 解析 Gemini 返回的内容
     const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!responseText) {
+      console.error('No response text from Gemini:', geminiData);
       throw new Error('Gemini API 返回格式错误');
     }
+
+    console.log('Extracted text:', responseText);
 
     // 提取 JSON（移除可能的 markdown 代码块）
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
