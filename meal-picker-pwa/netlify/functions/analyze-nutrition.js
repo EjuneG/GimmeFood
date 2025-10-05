@@ -49,9 +49,9 @@ exports.handler = async (event) => {
       };
     }
 
-    // 调用 Gemini API (使用 v1 API 的 gemini-1.5-flash)
+    // 调用 Gemini API (使用 v1 API 的 gemini-2.5-flash)
     const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
