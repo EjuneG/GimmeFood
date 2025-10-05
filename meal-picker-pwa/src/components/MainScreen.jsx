@@ -7,7 +7,7 @@ import { MEAL_TYPE_NAMES, MEAL_TYPES, TIER_NAMES } from '../utils/storage.js';
 
 export function MainScreen() {
   const { state, dispatch, ActionTypes } = useApp();
-  const { startSelection } = useSelection();
+  const { selectMealType } = useSelection();
   const [showMealTypes, setShowMealTypes] = useState(false);
 
   // 开始选择流程
@@ -18,11 +18,7 @@ export function MainScreen() {
   // 选择餐点类型并开始推荐流程
   const handleMealTypeSelect = (mealType) => {
     setShowMealTypes(false);
-    dispatch({
-      type: ActionTypes.SET_SELECTED_MEAL_TYPE,
-      payload: mealType
-    });
-    startSelection();
+    selectMealType(mealType);
   };
 
   // 获取当前时间对应的推荐餐点类型
