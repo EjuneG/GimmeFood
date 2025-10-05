@@ -28,12 +28,6 @@ export const useServiceWorker = () => {
     try {
       // 向等待中的服务工作者发送跳过等待消息
       registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-
-      // 监听控制器变化，表示新的服务工作者已激活
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        // 重载页面以使用新版本
-        window.location.reload();
-      });
     } catch (error) {
       console.error('更新应用失败:', error);
       setIsUpdating(false);
@@ -45,6 +39,14 @@ export const useServiceWorker = () => {
     if (!('serviceWorker' in navigator)) {
       return;
     }
+
+    // 监听控制器变化，表示新的服务工作者已激活
+    const handleControllerChange = () => {
+      // 重载页面以使用新版本
+      window.location.reload();
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
 
     // 监听服务工作者注册
     navigator.serviceWorker.ready
@@ -93,6 +95,7 @@ export const useServiceWorker = () => {
 
     // 清理事件监听器
     return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
       window.removeEventListener('online', handleOnline);
     };
   }, [checkForUpdates]);

@@ -12,17 +12,6 @@ self.addEventListener('message', event => {
 self.addEventListener('activate', event => {
   // 立即控制所有客户端
   event.waitUntil(self.clients.claim());
-
-  // 通知客户端有新版本可用
-  event.waitUntil(
-    self.clients.matchAll().then(clients => {
-      clients.forEach(client => {
-        client.postMessage({
-          type: 'UPDATE_AVAILABLE'
-        });
-      });
-    })
-  );
 });
 
 // 安装事件处理
