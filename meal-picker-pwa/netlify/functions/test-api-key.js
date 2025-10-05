@@ -21,22 +21,49 @@ exports.handler = async (event) => {
       };
     }
 
-    // Test with a simple request
-    const testResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: 'Say "API key works!" in JSON format: {"status": "ok"}' }]
-          }]
-        })
-      }
-    );
+    // Test multiple model/API version combinations
+    const modelsToTest = [
+      { api: 'v1', model: 'gemini-pro' },
+      { api: 'v1', model: 'gemini-1.5-flash' },
+      { api: 'v1beta', model: 'gemini-1.5-flash' },
+      { api: 'v1beta', model: 'gemini-1.5-pro' }
+    ];
 
-    const status = testResponse.status;
-    const responseText = await testResponse.text();
+    const results = [];
+
+    for (const { api, model } of modelsToTest) {
+      try {
+        const testResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v${api}/models/${model}:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [{ text: 'Test' }]
+              }]
+            })
+          }
+        );
+
+        const responseText = await testResponse.text();
+        results.push({
+          api,
+          model,
+          status: testResponse.status,
+          success: testResponse.ok,
+          response: responseText.substring(0, 200)
+        });
+      } catch (err) {
+        results.push({
+          api,
+          model,
+          status: 'error',
+          success: false,
+          error: err.message
+        });
+      }
+    }
 
     return {
       statusCode: 200,
@@ -45,9 +72,8 @@ exports.handler = async (event) => {
         api_key_exists: true,
         api_key_length: apiKey.length,
         api_key_prefix: apiKey.substring(0, 10) + '...',
-        gemini_response_status: status,
-        gemini_response: responseText.substring(0, 500),
-        success: testResponse.ok
+        model_tests: results,
+        working_models: results.filter(r => r.success).map(r => `${r.api}/${r.model}`)
       })
     };
 
