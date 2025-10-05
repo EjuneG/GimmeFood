@@ -3,7 +3,6 @@
 import { useApp } from './useApp.js';
 import { useRestaurants } from './useRestaurants.js';
 import {
-  getRandomAbstractQuestion,
   intelligentRestaurantSelection,
   handleRestaurantRejection,
   handlePositiveFeedback,
@@ -17,41 +16,7 @@ export function useSelection() {
   const { state, dispatch, ActionTypes } = useApp();
   const { updateRestaurant, updateLastSelected } = useRestaurants();
 
-  // 开始选择流程
-  const startSelection = () => {
-    dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'question' });
-
-    // 获取随机抽象问题
-    const question = getRandomAbstractQuestion();
-    dispatch({
-      type: ActionTypes.SET_SELECTED_QUESTION,
-      payload: question
-    });
-  };
-
-  // 选择问题答案
-  const selectAnswer = (answer) => {
-    dispatch({
-      type: ActionTypes.SET_SELECTED_ANSWER,
-      payload: answer
-    });
-
-    // 如果是算法影响类问题，更新用户偏好
-    if (state.currentFlow.selectedQuestion?.effect) {
-      dispatch({
-        type: ActionTypes.UPDATE_USER_PREFERENCES,
-        payload: {
-          questionEffect: state.currentFlow.selectedQuestion.effect,
-          selectedOption: answer
-        }
-      });
-    }
-
-    // 进入餐点类型选择
-    dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'mealType' });
-  };
-
-  // 选择餐点类型
+  // 选择餐点类型并进行推荐
   const selectMealType = (mealType) => {
     dispatch({
       type: ActionTypes.SET_SELECTED_MEAL_TYPE,
@@ -96,6 +61,13 @@ export function useSelection() {
     if (selectedRestaurant) {
       // 更新餐厅最后选择时间
       updateLastSelected(selectedRestaurant.id);
+
+      // 增加餐厅被选择次数
+      const updatedRestaurant = {
+        ...selectedRestaurant,
+        selectionCount: (selectedRestaurant.selectionCount || 0) + 1
+      };
+      updateRestaurant(selectedRestaurant.id, updatedRestaurant);
 
       // 记录选择历史
       addSelectionRecord(
@@ -307,8 +279,6 @@ export function useSelection() {
   return {
     currentFlow: state.currentFlow,
     pendingFeedback: state.pendingFeedback,
-    startSelection,
-    selectAnswer,
     selectMealType,
     acceptRecommendation,
     rejectRecommendation,

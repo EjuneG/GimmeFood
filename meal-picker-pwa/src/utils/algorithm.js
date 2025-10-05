@@ -2,54 +2,6 @@
 
 import { TIER_WEIGHTS, TIERS } from './storage.js';
 
-// 抽象问题数据库
-export const ABSTRACT_QUESTIONS = {
-  // 纯心理作用问题 (不影响算法)
-  PSYCHOLOGICAL: [
-    { question: '太阳还是月亮？', options: ['太阳', '月亮'] },
-    { question: '海洋还是山脉？', options: ['海洋', '山脉'] },
-    { question: '春天还是秋天？', options: ['春天', '秋天'] },
-    { question: '猫还是狗？', options: ['猫', '狗'] },
-    { question: '蓝色还是红色？', options: ['蓝色', '红色'] },
-    { question: '早晨还是夜晚？', options: ['早晨', '夜晚'] },
-    { question: '咖啡还是茶？', options: ['咖啡', '茶'] },
-    { question: '电影还是音乐？', options: ['电影', '音乐'] },
-    { question: '雨天还是晴天？', options: ['雨天', '晴天'] },
-    { question: '左还是右？', options: ['左', '右'] }
-  ],
-
-  // 算法影响问题
-  ALGORITHMIC: [
-    {
-      question: '冒险还是舒适？',
-      options: ['冒险', '舒适'],
-      effect: 'adventure_comfort'
-    },
-    {
-      question: '新鲜还是熟悉？',
-      options: ['新鲜', '熟悉'],
-      effect: 'adventure_comfort'
-    },
-    {
-      question: '探索还是安全？',
-      options: ['探索', '安全'],
-      effect: 'adventure_comfort'
-    },
-    {
-      question: '挑战还是稳定？',
-      options: ['挑战', '稳定'],
-      effect: 'adventure_comfort'
-    }
-  ]
-};
-
-// 获取随机抽象问题
-export function getRandomAbstractQuestion() {
-  const allQuestions = [...ABSTRACT_QUESTIONS.PSYCHOLOGICAL, ...ABSTRACT_QUESTIONS.ALGORITHMIC];
-  const randomIndex = Math.floor(Math.random() * allQuestions.length);
-  return allQuestions[randomIndex];
-}
-
 // 计算餐厅的当前权重
 export function calculateRestaurantWeight(restaurant, preferences = {}) {
   let baseWeight = TIER_WEIGHTS[restaurant.tier] || 1;
@@ -62,28 +14,6 @@ export function calculateRestaurantWeight(restaurant, preferences = {}) {
     const hoursSinceLastSelection = (Date.now() - new Date(lastSelected).getTime()) / (1000 * 60 * 60);
     if (hoursSinceLastSelection < 24) {
       weight = Math.max(1, weight - 1); // 临时降一级
-    }
-  }
-
-  // 抽象问题影响权重
-  if (preferences.questionEffect === 'adventure_comfort') {
-    if (preferences.selectedOption === '冒险' || preferences.selectedOption === '新鲜' ||
-        preferences.selectedOption === '探索' || preferences.selectedOption === '挑战') {
-      // 冒险选择：提升长期未选餐厅权重
-      const daysSinceLastSelection = lastSelected ?
-        (Date.now() - new Date(lastSelected).getTime()) / (1000 * 60 * 60 * 24) : 999;
-
-      if (daysSinceLastSelection > 7) {
-        weight += 1; // 提升约1个等级
-      }
-    } else {
-      // 舒适选择：提升最近选择餐厅权重
-      const daysSinceLastSelection = lastSelected ?
-        (Date.now() - new Date(lastSelected).getTime()) / (1000 * 60 * 60 * 24) : 999;
-
-      if (daysSinceLastSelection <= 7) {
-        weight += 1; // 提升约1个等级
-      }
     }
   }
 
@@ -198,7 +128,6 @@ export function convertWeightToTierChange(restaurant) {
 // 处理餐厅拒绝 - 使用新的权重系统
 export function handleRestaurantRejection(restaurant) {
   const updatedRestaurant = { ...restaurant };
-  updatedRestaurant.rejectionCount = (updatedRestaurant.rejectionCount || 0) + 1;
 
   // 使用权重调整系统进行降级
   return adjustRestaurantWeight(updatedRestaurant, -1.0);

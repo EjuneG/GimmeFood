@@ -199,8 +199,8 @@ export function ManagementScreen() {
                         {/* 统计信息 */}
                         <div className="flex items-center space-x-4 text-xs text-gray-500">
                           <div className="flex items-center space-x-1">
-                            <span>👎</span>
-                            <span>{restaurant.rejectionCount || 0} 次拒绝</span>
+                            <span>✅</span>
+                            <span>{restaurant.selectionCount || 0} 次选择</span>
                           </div>
                           {restaurant.lastSelected && (
                             <div className="flex items-center space-x-1">

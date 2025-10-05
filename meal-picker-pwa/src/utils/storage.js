@@ -60,7 +60,7 @@ export function createRestaurant(name, tier, mealTypes = []) {
     mealTypes: [...mealTypes],
     currentWeight: TIER_WEIGHTS[tier],
     originalTier: tier,
-    rejectionCount: 0,
+    selectionCount: 0,
     lastSelected: null,
     createdAt: new Date().toISOString(),
     feedbackHistory: []

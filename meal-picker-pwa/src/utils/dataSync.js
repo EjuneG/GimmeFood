@@ -137,7 +137,7 @@ export function mergeDuplicateRestaurants(existing, imported, mergeStrategy) {
     case 'smart_merge':
     default: {
       // 智能合并：保留更新的lastSelected，合并反馈历史
-      merged.rejectionCount = Math.max(existing.rejectionCount || 0, imported.rejectionCount || 0);
+      merged.selectionCount = Math.max(existing.selectionCount || 0, imported.selectionCount || 0);
 
       // 使用更新的lastSelected时间
       if (imported.lastSelected && existing.lastSelected) {
@@ -188,7 +188,7 @@ export function normalizeImportedRestaurants(restaurants) {
       ...restaurant,
       name: restaurant.name.trim(),
       mealTypes: Array.isArray(restaurant.mealTypes) ? restaurant.mealTypes : [],
-      rejectionCount: restaurant.rejectionCount || 0,
+      selectionCount: restaurant.selectionCount || 0,
       feedbackHistory: restaurant.feedbackHistory || [],
       currentWeight: restaurant.currentWeight || 1,
       originalTier: restaurant.originalTier || restaurant.tier
