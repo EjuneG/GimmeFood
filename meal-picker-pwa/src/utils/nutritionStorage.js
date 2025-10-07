@@ -140,3 +140,65 @@ export function deleteNutritionRecord(timestamp) {
     return false;
   }
 }
+
+/**
+ * 获取指定餐厅的所有不重复菜品描述
+ * @param {string} restaurantName - 餐厅名称
+ * @param {number} limit - 返回的最大数量，默认10
+ * @returns {Array<string>} 菜品描述数组，按最近使用时间排序
+ */
+export function getRestaurantDishes(restaurantName, limit = 10) {
+  if (!restaurantName) return [];
+
+  const history = getNutritionHistory();
+
+  // 过滤指定餐厅的记录
+  const restaurantRecords = history.filter(
+    record => record.restaurant === restaurantName && record.foodDescription
+  );
+
+  // 按时间倒序排序（最近的在前）
+  restaurantRecords.sort((a, b) =>
+    new Date(b.timestamp) - new Date(a.timestamp)
+  );
+
+  // 去重：保留每个菜品描述的最新记录
+  const uniqueDishes = [];
+  const seenDescriptions = new Set();
+
+  for (const record of restaurantRecords) {
+    const description = record.foodDescription.trim();
+    if (!seenDescriptions.has(description)) {
+      seenDescriptions.add(description);
+      uniqueDishes.push(description);
+
+      if (uniqueDishes.length >= limit) break;
+    }
+  }
+
+  return uniqueDishes;
+}
+
+/**
+ * 获取所有餐厅的菜品历史统计
+ * @returns {Object} 餐厅名称为key，菜品数组为value
+ */
+export function getAllRestaurantDishes() {
+  const history = getNutritionHistory();
+  const restaurantMap = {};
+
+  history.forEach(record => {
+    if (record.restaurant && record.foodDescription) {
+      if (!restaurantMap[record.restaurant]) {
+        restaurantMap[record.restaurant] = [];
+      }
+
+      const description = record.foodDescription.trim();
+      if (!restaurantMap[record.restaurant].includes(description)) {
+        restaurantMap[record.restaurant].push(description);
+      }
+    }
+  });
+
+  return restaurantMap;
+}

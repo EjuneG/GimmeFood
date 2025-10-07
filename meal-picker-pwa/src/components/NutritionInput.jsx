@@ -1,10 +1,11 @@
 // 营养输入组件
 // 用户输入食物描述，调用API进行营养分析
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../hooks/useApp.js';
 import { MEAL_TYPE_NAMES } from '../utils/storage.js';
 import { callServerlessFunction } from '../utils/apiEndpoints.js';
+import { getRestaurantDishes } from '../utils/nutritionStorage.js';
 
 export function NutritionInput() {
   const { state, dispatch, ActionTypes } = useApp();
@@ -78,13 +79,22 @@ export function NutritionInput() {
     }
   };
 
-  // 示例建议
-  const examples = [
-    '牛肉拉面、加蛋、小菜',
-    '香辣鸡腿堡套餐、可乐',
-    '番茄炒蛋、米饭、青菜汤',
-    '咖啡、三明治'
-  ];
+  // 根据选择的餐厅获取历史菜品，如果没有历史则显示通用示例
+  const examples = useMemo(() => {
+    if (selectedRestaurant?.name) {
+      const restaurantDishes = getRestaurantDishes(selectedRestaurant.name, 8);
+      if (restaurantDishes.length > 0) {
+        return restaurantDishes;
+      }
+    }
+    // 如果没有历史记录，返回通用示例
+    return [
+      '牛肉拉面、加蛋、小菜',
+      '香辣鸡腿堡套餐、可乐',
+      '番茄炒蛋、米饭、青菜汤',
+      '咖啡、三明治'
+    ];
+  }, [selectedRestaurant?.name]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-4">
@@ -145,9 +155,13 @@ export function NutritionInput() {
             </div>
           )}
 
-          {/* 示例建议 */}
+          {/* 示例建议或历史菜品 */}
           <div className="mt-4 mb-6">
-            <p className="text-xs text-gray-600 mb-2">示例：</p>
+            <p className="text-xs text-gray-600 mb-2">
+              {selectedRestaurant?.name && getRestaurantDishes(selectedRestaurant.name, 1).length > 0
+                ? '🕐 你之前吃过：'
+                : '💡 示例：'}
+            </p>
             <div className="flex flex-wrap gap-2">
               {examples.map((example, index) => (
                 <button
