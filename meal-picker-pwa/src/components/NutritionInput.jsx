@@ -5,7 +5,7 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../hooks/useApp.js';
 import { MEAL_TYPE_NAMES } from '../utils/storage.js';
 import { callServerlessFunction } from '../utils/apiEndpoints.js';
-import { getRestaurantDishes } from '../utils/nutritionStorage.js';
+import { getRestaurantDishes, getCachedNutritionData } from '../utils/nutritionStorage.js';
 
 export function NutritionInput() {
   const { state, dispatch, ActionTypes } = useApp();
@@ -17,6 +17,38 @@ export function NutritionInput() {
   const handleCancel = () => {
     // 取消营养记录，返回主界面
     dispatch({ type: ActionTypes.RESET_SELECTION_FLOW });
+  };
+
+  // 处理点击历史菜品按钮
+  const handleExampleClick = (dishDescription) => {
+    // 检查是否有缓存的营养数据
+    const cachedData = getCachedNutritionData(
+      selectedRestaurant?.name,
+      dishDescription
+    );
+
+    if (cachedData) {
+      // 使用缓存数据，直接跳转到结果页面
+      dispatch({
+        type: ActionTypes.SET_NUTRITION_DATA,
+        payload: {
+          ...cachedData,
+          restaurant: selectedRestaurant?.name,
+          mealType: selectedMealType,
+          foodDescription: dishDescription
+        }
+      });
+
+      dispatch({
+        type: ActionTypes.SET_FOOD_DESCRIPTION,
+        payload: dishDescription
+      });
+
+      dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'nutrition_result' });
+    } else {
+      // 没有缓存数据，只填充输入框
+      setFoodInput(dishDescription);
+    }
   };
 
   const handleSubmit = async () => {
@@ -166,7 +198,7 @@ export function NutritionInput() {
               {examples.map((example, index) => (
                 <button
                   key={index}
-                  onClick={() => setFoodInput(example)}
+                  onClick={() => handleExampleClick(example)}
                   className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs hover:bg-purple-200 transition-colors"
                   disabled={loading}
                 >

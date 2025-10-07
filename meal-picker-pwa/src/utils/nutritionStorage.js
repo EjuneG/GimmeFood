@@ -202,3 +202,37 @@ export function getAllRestaurantDishes() {
 
   return restaurantMap;
 }
+
+/**
+ * 获取指定餐厅和菜品的缓存营养数据（如果存在）
+ * @param {string} restaurantName - 餐厅名称
+ * @param {string} foodDescription - 食物描述
+ * @returns {Object|null} 营养数据对象，如果没有缓存则返回null
+ */
+export function getCachedNutritionData(restaurantName, foodDescription) {
+  if (!restaurantName || !foodDescription) return null;
+
+  const history = getNutritionHistory();
+  const trimmedDescription = foodDescription.trim();
+
+  // 按时间倒序查找，返回最新的匹配记录
+  for (let i = history.length - 1; i >= 0; i--) {
+    const record = history[i];
+    if (
+      record.restaurant === restaurantName &&
+      record.foodDescription?.trim() === trimmedDescription &&
+      record.calories !== undefined // 确保有营养数据
+    ) {
+      // 返回营养数据（不包括 timestamp 和 date，因为这次是新的记录）
+      return {
+        calories: record.calories,
+        protein: record.protein,
+        carbs: record.carbs,
+        fat: record.fat,
+        note: record.note
+      };
+    }
+  }
+
+  return null;
+}
