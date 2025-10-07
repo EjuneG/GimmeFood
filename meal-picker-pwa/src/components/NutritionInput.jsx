@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../hooks/useApp.js';
 import { MEAL_TYPE_NAMES } from '../utils/storage.js';
+import { callServerlessFunction } from '../utils/apiEndpoints.js';
 
 export function NutritionInput() {
   const { state, dispatch, ActionTypes } = useApp();
@@ -30,11 +31,9 @@ export function NutritionInput() {
       // 构建完整的食物描述
       const fullDescription = `在${selectedRestaurant?.name || '餐厅'}吃了：${foodInput}`;
 
-      // 调用Netlify Function
-      const response = await fetch('/.netlify/functions/analyze-nutrition', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ foodDescription: fullDescription })
+      // 调用 API (自动检测 Netlify/Vercel)
+      const response = await callServerlessFunction('analyze-nutrition', {
+        foodDescription: fullDescription
       });
 
       const result = await response.json();

@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../hooks/useApp.js';
+import { callServerlessFunction } from '../utils/apiEndpoints.js';
 
 export function NutritionGoalSetup() {
   const { dispatch, ActionTypes } = useApp();
@@ -79,14 +80,11 @@ export function NutritionGoalSetup() {
     setError(null);
 
     try {
-      const response = await fetch('/.netlify/functions/generate-nutrition-goal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          weight,
-          height,
-          goalType: aiInputs.goalType
-        })
+      // 调用 API (自动检测 Netlify/Vercel)
+      const response = await callServerlessFunction('generate-nutrition-goal', {
+        weight,
+        height,
+        goalType: aiInputs.goalType
       });
 
       const result = await response.json();
