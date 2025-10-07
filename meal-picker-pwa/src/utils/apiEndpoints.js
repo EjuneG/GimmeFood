@@ -9,18 +9,22 @@
 export function detectPlatform() {
   // Check if running in browser
   if (typeof window === 'undefined') {
+    console.log('[Platform Detection] Not in browser, defaulting to local');
     return 'local';
   }
 
   const hostname = window.location.hostname;
+  console.log('[Platform Detection] Hostname:', hostname);
 
   // Detect Vercel
   if (hostname.includes('vercel.app') || hostname.includes('vercel.com')) {
+    console.log('[Platform Detection] Detected: Vercel');
     return 'vercel';
   }
 
   // Detect Netlify
   if (hostname.includes('netlify.app') || hostname.includes('netlify.com')) {
+    console.log('[Platform Detection] Detected: Netlify');
     return 'netlify';
   }
 
@@ -30,6 +34,7 @@ export function detectPlatform() {
 
   // Fallback: Check if Netlify functions exist by convention
   // Default to Netlify for local development if using Netlify CLI
+  console.log('[Platform Detection] No match, defaulting to Netlify');
   return 'netlify';
 }
 
@@ -56,7 +61,9 @@ export function getApiBasePath() {
  */
 export function getApiEndpoint(functionName) {
   const basePath = getApiBasePath();
-  return `${basePath}/${functionName}`;
+  const endpoint = `${basePath}/${functionName}`;
+  console.log('[API Endpoint] Function:', functionName, '-> Endpoint:', endpoint);
+  return endpoint;
 }
 
 /**

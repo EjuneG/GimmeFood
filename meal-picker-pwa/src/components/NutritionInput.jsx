@@ -27,12 +27,13 @@ export function NutritionInput() {
     setLoading(true);
     setError(null);
 
+    let response;
     try {
       // 构建完整的食物描述
       const fullDescription = `在${selectedRestaurant?.name || '餐厅'}吃了：${foodInput}`;
 
       // 调用 API (自动检测 Netlify/Vercel)
-      const response = await callServerlessFunction('analyze-nutrition', {
+      response = await callServerlessFunction('analyze-nutrition', {
         foodDescription: fullDescription
       });
 
@@ -69,7 +70,6 @@ export function NutritionInput() {
       console.error('Nutrition analysis error:', err);
       console.error('Error details:', {
         message: err.message,
-        response: response,
         status: response?.status
       });
       setError(`网络错误: ${err.message || '请检查连接'}`);
