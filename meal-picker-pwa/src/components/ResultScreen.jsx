@@ -1,9 +1,15 @@
-// 结果显示和重选流程组件
+// 结果显示和重选流程组件 - Minimalist redesign
+// Clean recommendation result with subtle animations
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Check, X, RefreshCw, ArrowLeft, Sparkles } from 'lucide-react';
 import { useApp } from '../hooks/useApp.js';
 import { useSelection } from '../hooks/useSelection.js';
 import { TIER_NAMES, MEAL_TYPE_NAMES } from '../utils/storage.js';
+import { Button } from './ui/Button.jsx';
+import { Card } from './ui/Card.jsx';
+import { Avatar } from './ui/Avatar.jsx';
 
 export function ResultScreen() {
   const { state } = useApp();
@@ -16,18 +22,25 @@ export function ResultScreen() {
     // 显示结果动画
     const timer = setTimeout(() => {
       setShowAnimation(false);
-    }, 2000);
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, [selectedRestaurant]);
 
   if (!selectedRestaurant) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-100 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="text-4xl mb-4">😅</div>
-          <p className="text-gray-600">没有找到合适的餐厅...</p>
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="text-center max-w-sm">
+          <div className="py-4">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <X size={32} className="text-secondary" aria-hidden="true" />
+            </div>
+            <h3 className="font-semibold text-body mb-2">没有找到合适的餐厅</h3>
+            <p className="text-caption text-secondary">
+              请添加更多餐厅或调整筛选条件
+            </p>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -35,21 +48,42 @@ export function ResultScreen() {
   // 加载动画界面
   if (showAnimation) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="text-6xl mb-6 animate-bounce">🎲</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, ease: "easeInOut", repeat: Infinity }}
+            className="inline-block mb-6"
+          >
+            <Sparkles size={48} className="text-accent" aria-hidden="true" />
+          </motion.div>
+          <h2 className="text-section font-semibold text-primary mb-4">
             正在为你选择...
           </h2>
-          <div className="flex justify-center space-x-2">
-            <div className="w-3 h-3 bg-orange-400 rounded-full animate-pulse"></div>
-            <div className="w-3 h-3 bg-orange-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-            <div className="w-3 h-3 bg-orange-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+          <div className="flex justify-center gap-2">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                className="w-2 h-2 bg-accent rounded-full"
+              />
+            ))}
           </div>
         </div>
       </div>
     );
   }
+
+  // 获取餐厅首字母
+  const getRestaurantInitial = (name) => {
+    return name.charAt(0).toUpperCase();
+  };
+
+  // 判断是否为特色餐厅
+  const isFeatured = (tier) => {
+    return tier === 'hàng' || tier === 'dǐngjí';
+  };
 
   // 重选流程界面
   if (reselectionStep > 0) {
@@ -78,49 +112,53 @@ export function ResultScreen() {
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 p-4">
+      <div className="min-h-screen bg-background p-4 pb-20">
         <div className="max-w-md mx-auto pt-8">
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2 text-center">
-              {title}
-            </h2>
-            <p className="text-gray-600 text-center mb-6">
-              {subtitle}
-            </p>
+          <Card>
+            <div className="text-center mb-6">
+              <h2 className="text-section font-semibold mb-2">
+                {title}
+              </h2>
+              <p className="text-caption text-secondary">
+                {subtitle}
+              </p>
+            </div>
 
             {/* 单一选项 (步骤 1) */}
             {reselectionStep === 1 && (
               <div className="space-y-4">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
-                  <div className="flex items-center space-x-4">
-                    <div className="text-3xl">🍽️</div>
+                <div className="bg-muted rounded-xl p-4 border border-divider">
+                  <div className="flex items-center gap-4">
+                    <Avatar
+                      initial={getRestaurantInitial(selectedRestaurant.name)}
+                      featured={isFeatured(selectedRestaurant.tier)}
+                    />
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-800">{selectedRestaurant.name}</h3>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                          {TIER_NAMES[selectedRestaurant.tier]}
-                        </span>
-                        <span className="text-sm text-gray-600">
-                          {MEAL_TYPE_NAMES[selectedMealType]}
-                        </span>
+                      <h3 className="text-body font-semibold">{selectedRestaurant.name}</h3>
+                      <div className="flex items-center gap-2 mt-1 text-caption text-secondary">
+                        <span>{TIER_NAMES[selectedRestaurant.tier]}</span>
+                        <span>·</span>
+                        <span>{MEAL_TYPE_NAMES[selectedMealType]}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex space-x-3">
-                  <button
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="primary"
                     onClick={acceptRecommendation}
-                    className="flex-1 py-3 px-4 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-colors"
+                    className="flex items-center justify-center gap-2"
                   >
+                    <Check size={16} />
                     就吃它！
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="secondary"
                     onClick={startReselection}
-                    className="flex-1 py-3 px-4 bg-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-400 transition-colors"
                   >
                     {buttonText}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -132,28 +170,30 @@ export function ResultScreen() {
                   <button
                     key={restaurant.id}
                     onClick={() => selectFromReselectionOptions(restaurant)}
-                    className="w-full bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 hover:border-purple-400 transition-colors"
+                    className="w-full bg-surface border-2 border-divider rounded-xl p-4 hover:border-accent hover:bg-muted transition-all"
                   >
-                    <div className="flex items-center space-x-4">
-                      <div className="text-2xl">🍽️</div>
+                    <div className="flex items-center gap-4">
+                      <Avatar
+                        initial={getRestaurantInitial(restaurant.name)}
+                        featured={isFeatured(restaurant.tier)}
+                      />
                       <div className="flex-1 text-left">
-                        <h3 className="font-bold text-gray-800">{restaurant.name}</h3>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
-                            {TIER_NAMES[restaurant.tier]}
-                          </span>
-                        </div>
+                        <h3 className="font-semibold text-body">{restaurant.name}</h3>
+                        <span className="text-caption text-secondary">
+                          {TIER_NAMES[restaurant.tier]}
+                        </span>
                       </div>
                     </div>
                   </button>
                 ))}
 
-                <button
+                <Button
+                  variant="secondary"
                   onClick={skipTwoOptions}
-                  className="w-full py-3 px-4 bg-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-400 transition-colors mt-4"
+                  className="w-full"
                 >
                   {buttonText}
-                </button>
+                </Button>
               </div>
             )}
 
@@ -164,13 +204,17 @@ export function ResultScreen() {
                   <button
                     key={restaurant.id}
                     onClick={() => selectFromReselectionOptions(restaurant)}
-                    className="w-full bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-3 border border-gray-200 hover:border-gray-400 transition-colors"
+                    className="w-full bg-surface border border-divider rounded-lg p-3 hover:border-accent hover:bg-muted transition-all"
                   >
-                    <div className="flex items-center space-x-3">
-                      <div className="text-lg">🍽️</div>
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        initial={getRestaurantInitial(restaurant.name)}
+                        featured={isFeatured(restaurant.tier)}
+                        className="w-8 h-8"
+                      />
                       <div className="flex-1 text-left">
-                        <h3 className="font-medium text-gray-800">{restaurant.name}</h3>
-                        <span className="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded-full">
+                        <h3 className="font-medium text-body">{restaurant.name}</h3>
+                        <span className="text-caption text-secondary">
                           {TIER_NAMES[restaurant.tier]}
                         </span>
                       </div>
@@ -178,18 +222,16 @@ export function ResultScreen() {
                   </button>
                 ))}
 
-                <button
-                  onClick={() => {
-                    // 重新开始整个选择流程
-                    window.location.reload(); // 简单重新开始
-                  }}
-                  className="w-full py-3 px-4 bg-red-300 text-red-800 rounded-xl font-medium hover:bg-red-400 transition-colors mt-4"
+                <Button
+                  variant="secondary"
+                  onClick={() => window.location.reload()}
+                  className="w-full mt-4"
                 >
                   重新开始
-                </button>
+                </Button>
               </div>
             )}
-          </div>
+          </Card>
         </div>
       </div>
     );
@@ -201,73 +243,97 @@ export function ResultScreen() {
 
   // 初始推荐结果界面
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4">
+    <div className="min-h-screen bg-background p-4 pb-20">
       <div className="max-w-md mx-auto pt-12">
-        <div className="bg-white rounded-2xl shadow-xl p-6">
-          {/* 成功图标 */}
-          <div className="text-center mb-6">
-            <div className="text-6xl mb-4">🎉</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              {randomFunText}
-            </h2>
-            <p className="text-gray-600">
-              基于你的偏好和历史记录
-            </p>
-          </div>
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 20 }}
+        >
+          <Card>
+            {/* 成功动画 */}
+            <div className="text-center mb-6">
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.2 }}
+                className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center"
+              >
+                <Check className="text-accent" size={32} aria-hidden="true" />
+              </motion.div>
+              <h2 className="text-section font-semibold mb-2">
+                {randomFunText}
+              </h2>
+              <p className="text-caption text-secondary">
+                基于你的偏好和历史记录
+              </p>
+            </div>
 
-          {/* 推荐餐厅卡片 */}
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200 mb-6">
-            <div className="text-center">
-              <div className="text-4xl mb-3">🍽️</div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                {selectedRestaurant.name}
-              </h3>
-              <div className="flex justify-center items-center space-x-2 mb-3">
-                <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full font-medium">
-                  {TIER_NAMES[selectedRestaurant.tier]}
-                </span>
-                <span className="text-gray-400">•</span>
-                <span className="text-sm text-gray-600">
-                  {MEAL_TYPE_NAMES[selectedMealType]}
-                </span>
-              </div>
-              <div className="text-xs text-gray-500">
-                ID: {selectedRestaurant.id.slice(-6)} • 权重算法推荐
+            {/* 推荐餐厅卡片 */}
+            <div className="bg-muted rounded-2xl p-6 border border-divider mb-6">
+              <div className="text-center">
+                <Avatar
+                  initial={getRestaurantInitial(selectedRestaurant.name)}
+                  featured={isFeatured(selectedRestaurant.tier)}
+                  className="w-16 h-16 mx-auto mb-4 text-title"
+                />
+                <h3 className="text-title font-semibold mb-2">
+                  {selectedRestaurant.name}
+                </h3>
+                <div className="flex justify-center items-center gap-2 mb-3">
+                  <span className="px-3 py-1 bg-accent/10 text-accent text-caption rounded-full font-medium">
+                    {TIER_NAMES[selectedRestaurant.tier]}
+                  </span>
+                  <span className="text-secondary">·</span>
+                  <span className="text-caption text-secondary">
+                    {MEAL_TYPE_NAMES[selectedMealType]}
+                  </span>
+                </div>
+                <div className="text-caption text-secondary">
+                  权重算法推荐
+                </div>
               </div>
             </div>
+
+            {/* 行动按钮 */}
+            <div className="space-y-3">
+              <Button
+                variant="primary"
+                onClick={acceptRecommendation}
+                size="large"
+                className="w-full"
+              >
+                <Check size={20} />
+                就吃它！
+              </Button>
+
+              <Button
+                variant="secondary"
+                onClick={startReselection}
+                className="w-full"
+              >
+                <RefreshCw size={16} />
+                不满意，重新选择
+              </Button>
+
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full py-2 text-caption text-secondary hover:text-primary transition-colors flex items-center justify-center gap-2"
+                aria-label="返回主菜单"
+              >
+                <ArrowLeft size={16} />
+                返回主菜单
+              </button>
+            </div>
+          </Card>
+
+          {/* 底部提示 */}
+          <div className="mt-6 text-center">
+            <p className="text-caption text-secondary">
+              选择后会记录你的偏好，下次推荐会更准确
+            </p>
           </div>
-
-          {/* 行动按钮 */}
-          <div className="space-y-3">
-            <button
-              onClick={acceptRecommendation}
-              className="w-full py-4 px-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold text-lg hover:from-green-600 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg"
-            >
-              就吃它！ 🚀
-            </button>
-
-            <button
-              onClick={startReselection}
-              className="w-full py-3 px-4 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors"
-            >
-              不满意，重新选择
-            </button>
-
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full py-2 px-4 text-gray-500 hover:text-gray-700 transition-colors text-sm"
-            >
-              返回主菜单
-            </button>
-          </div>
-        </div>
-
-        {/* 底部提示 */}
-        <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
-            选择后会记录你的偏好，下次推荐会更准确
-          </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

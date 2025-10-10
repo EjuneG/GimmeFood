@@ -1,11 +1,16 @@
-// 营养目标卡片组件
-// 显示在主界面，展示目标和进度或提示设置目标
+// 营养目标卡片组件 - Minimalist redesign
+// Displays nutrition goals with clean progress bars and monochrome aesthetic
 
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { useApp } from '../hooks/useApp.js';
 import { getTodayTotal } from '../utils/nutritionStorage.js';
 import { calculateProgress, getProgressStatus } from '../utils/nutritionGoalStorage.js';
 import { WeeklyNutritionView } from './WeeklyNutritionView.jsx';
+import { Card } from './ui/Card.jsx';
+import { Button } from './ui/Button.jsx';
+import { ProgressBar } from './ui/ProgressBar.jsx';
 
 export function NutritionGoalCard() {
   const { state, dispatch, ActionTypes } = useApp();
@@ -22,23 +27,20 @@ export function NutritionGoalCard() {
   // 如果没有设置目标，显示设置按钮
   if (!hasGoal) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-3">
-            <span className="text-3xl">🎯</span>
+      <Card className="text-center">
+        <div className="py-4">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <Target size={32} className="text-secondary" aria-hidden="true" />
           </div>
-          <h3 className="font-bold text-gray-900 mb-2">设置营养目标</h3>
-          <p className="text-sm text-gray-600 mb-4">
+          <h3 className="font-semibold text-body mb-2">设置营养目标</h3>
+          <p className="text-caption text-secondary mb-4">
             追踪每日摄入，掌控健康饮食
           </p>
-          <button
-            onClick={handleSetupGoal}
-            className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-xl font-medium hover:from-orange-600 hover:to-pink-600 transition-all transform hover:scale-105 shadow-md"
-          >
+          <Button variant="primary" onClick={handleSetupGoal}>
             立即设置 →
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
     );
   }
 
@@ -50,85 +52,41 @@ export function NutritionGoalCard() {
       name: '热量',
       current: todayTotal.calories,
       target: goal.calories,
-      unit: '千卡',
-      color: 'orange',
-      emoji: '🔥'
+      unit: '千卡'
     },
     {
       name: '蛋白质',
       current: todayTotal.protein,
       target: goal.protein,
-      unit: 'g',
-      color: 'blue',
-      emoji: '💪'
+      unit: 'g'
     },
     {
       name: '碳水',
       current: todayTotal.carbs,
       target: goal.carbs,
-      unit: 'g',
-      color: 'yellow',
-      emoji: '🍞'
+      unit: 'g'
     },
     {
       name: '脂肪',
       current: todayTotal.fat,
       target: goal.fat,
-      unit: 'g',
-      color: 'purple',
-      emoji: '🥑'
+      unit: 'g'
     }
   ];
 
-  const getColorClasses = (color, status) => {
-    const colorMap = {
-      orange: {
-        low: 'bg-orange-200',
-        good: 'bg-orange-500',
-        high: 'bg-red-500',
-        bg: 'bg-orange-50',
-        text: 'text-orange-700'
-      },
-      blue: {
-        low: 'bg-blue-200',
-        good: 'bg-blue-500',
-        high: 'bg-red-500',
-        bg: 'bg-blue-50',
-        text: 'text-blue-700'
-      },
-      yellow: {
-        low: 'bg-yellow-200',
-        good: 'bg-yellow-500',
-        high: 'bg-red-500',
-        bg: 'bg-yellow-50',
-        text: 'text-yellow-700'
-      },
-      purple: {
-        low: 'bg-purple-200',
-        good: 'bg-purple-500',
-        high: 'bg-red-500',
-        bg: 'bg-purple-50',
-        text: 'text-purple-700'
-      }
-    };
-    return colorMap[color][status];
-  };
-
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+    <Card className="p-0 overflow-hidden">
       {/* 标题栏 */}
-      <div className="p-4 border-b border-gray-100">
+      <div className="p-4 border-b border-divider">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span className="text-2xl">📊</span>
-            <div>
-              <h3 className="font-bold text-gray-900">今日营养</h3>
-              <p className="text-xs text-gray-500">目标追踪</p>
-            </div>
+          <div>
+            <h3 className="font-semibold text-body mb-1">今日营养</h3>
+            <p className="text-caption text-secondary">目标追踪</p>
           </div>
           <button
             onClick={handleSetupGoal}
-            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+            className="text-caption text-accent hover:text-accent-dark font-medium transition-colors"
+            aria-label="调整营养目标"
           >
             调整目标
           </button>
@@ -137,35 +95,39 @@ export function NutritionGoalCard() {
 
       {/* Daily progress bars */}
       <div className="p-4">
-        <div className="space-y-3">
+        <div className="space-y-4">
           {nutrients.map(nutrient => {
             const progress = calculateProgress(nutrient.current, nutrient.target);
             const status = getProgressStatus(progress);
-            const progressWidth = Math.min(progress, 100);
 
             return (
               <div key={nutrient.name}>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center space-x-1">
-                    <span className="text-sm">{nutrient.emoji}</span>
-                    <span className="text-sm font-medium text-gray-700">{nutrient.name}</span>
-                  </div>
-                  <div className="text-sm">
-                    <span className={`font-bold ${
-                      status === 'good' ? 'text-green-600' :
-                      status === 'low' ? 'text-gray-600' :
-                      'text-red-600'
-                    }`}>
-                      {nutrient.current}
-                    </span>
-                    <span className="text-gray-500">/{nutrient.target}{nutrient.unit}</span>
-                  </div>
+                <div className="flex justify-between mb-1.5">
+                  <span className="text-body">{nutrient.name}</span>
+                  <motion.span
+                    key={nutrient.current}
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className={`text-body font-semibold tabular-nums ${
+                      status === 'good' ? 'text-accent' :
+                      status === 'low' ? 'text-secondary' :
+                      'text-accent-dark'
+                    }`}
+                  >
+                    {nutrient.current}
+                  </motion.span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${getColorClasses(nutrient.color, status)}`}
-                    style={{ width: `${progressWidth}%` }}
-                  ></div>
+
+                {/* Progress Bar - monochrome design */}
+                <ProgressBar
+                  value={nutrient.current}
+                  max={nutrient.target}
+                  animate={true}
+                />
+
+                <div className="text-caption text-secondary mt-1 text-right tabular-nums">
+                  / {nutrient.target}{nutrient.unit}
                 </div>
               </div>
             );
@@ -176,8 +138,8 @@ export function NutritionGoalCard() {
       {/* 提示信息 */}
       {goal.note && (
         <div className="px-4 pb-4">
-          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
-            <p className="text-xs text-indigo-700">
+          <div className="bg-muted border-l-4 border-l-accent rounded-lg p-3">
+            <p className="text-caption text-secondary">
               💡 {goal.note}
             </p>
           </div>
@@ -185,26 +147,33 @@ export function NutritionGoalCard() {
       )}
 
       {/* 本周统计 (Collapsible) */}
-      <div className="border-t border-gray-100">
+      <div className="border-t border-divider">
         <button
           onClick={() => setShowWeekly(!showWeekly)}
-          className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted transition-colors"
+          aria-expanded={showWeekly}
+          aria-label={showWeekly ? "收起本周统计" : "展开本周统计"}
         >
-          <div className="flex items-center space-x-2">
-            <span className="text-lg">📈</span>
-            <span className="text-sm font-medium text-gray-700">本周统计</span>
-          </div>
-          <span className="text-gray-400 text-sm">
-            {showWeekly ? '▲' : '▼'}
-          </span>
+          <span className="text-body font-medium">本周统计</span>
+          {showWeekly ? (
+            <ChevronUp size={20} className="text-secondary" aria-hidden="true" />
+          ) : (
+            <ChevronDown size={20} className="text-secondary" aria-hidden="true" />
+          )}
         </button>
 
         {showWeekly && (
-          <div className="px-4 pb-4 pt-2">
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.4, 0.0, 0.6, 1] }}
+            className="px-4 pb-4 pt-2 overflow-hidden"
+          >
             <WeeklyNutritionView />
-          </div>
+          </motion.div>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

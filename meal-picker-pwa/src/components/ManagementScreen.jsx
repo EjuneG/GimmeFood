@@ -1,19 +1,21 @@
-// 餐厅管理界面组件
+// 餐厅管理界面组件 - Minimalist redesign
+// Clean, compact list design with avatars and subtle interactions
 
 import React, { useState } from 'react';
-import { useApp } from '../hooks/useApp.js';
+import { Plus, Edit2, Trash2, Settings as SettingsIcon, Store } from 'lucide-react';
 import { useRestaurants } from '../hooks/useRestaurants.js';
 import { RestaurantForm } from './RestaurantForm.jsx';
 import { DataManagement } from './DataManagement.jsx';
 import { TIER_NAMES, MEAL_TYPE_NAMES } from '../utils/storage.js';
+import { Avatar } from './ui/Avatar.jsx';
+import { Button } from './ui/Button.jsx';
+import { Card } from './ui/Card.jsx';
 
 export function ManagementScreen() {
-  const { ActionTypes } = useApp();
   const { restaurants, deleteRestaurant, updateRestaurant, addRestaurant } = useRestaurants();
   const [currentView, setCurrentView] = useState('list'); // list, add, edit
   const [editingRestaurant, setEditingRestaurant] = useState(null);
   const [showDataManagement, setShowDataManagement] = useState(false);
-
 
   // 添加餐厅
   const handleAddRestaurant = () => {
@@ -66,178 +68,153 @@ export function ManagementScreen() {
     );
   }
 
+  // 获取餐厅首字母
+  const getRestaurantInitial = (name) => {
+    return name.charAt(0).toUpperCase();
+  };
+
+  // 判断是否为特色餐厅（顶级餐厅）
+  const isFeatured = (tier) => {
+    return tier === 'hàng' || tier === 'dǐngjí';
+  };
+
   // 餐厅列表视图
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* 头部卡片 */}
-      <div className="bg-gradient-to-br from-purple-600 to-indigo-700 text-white px-6 pt-12 pb-8">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-background pb-20">
+      {/* 头部 */}
+      <div className="bg-surface border-b border-divider px-6 pt-12 pb-8">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">餐厅管理</h1>
-            <p className="text-purple-100 mt-1">管理你的餐厅选项和偏好</p>
+            <h1 className="text-title font-semibold mb-2">餐厅管理</h1>
+            <p className="text-caption text-secondary">管理你的餐厅选项相册</p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex gap-2">
+            <button
+              onClick={handleAddRestaurant}
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
+              aria-label="添加餐厅"
+            >
+              <Plus size={20} className="text-secondary" />
+            </button>
             <button
               onClick={() => setShowDataManagement(true)}
-              className="p-2 bg-white/10 backdrop-blur-sm rounded-lg hover:bg-white/20 transition-colors"
-              title="数据管理"
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
+              aria-label="数据管理"
             >
-              <span className="text-lg">⚙️</span>
+              <SettingsIcon size={20} className="text-secondary" />
             </button>
-            <div className="text-4xl">🏪</div>
-          </div>
-        </div>
-
-        {/* 统计卡片 */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold">{restaurants.length}</div>
-              <div className="text-xs text-purple-100">总餐厅</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-yellow-200">{restaurants.filter(r => r.tier === 'hàng').length}</div>
-              <div className="text-xs text-purple-100">夯级餐厅</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-green-200">{restaurants.filter(r => r.lastSelected).length}</div>
-              <div className="text-xs text-purple-100">已尝试</div>
-            </div>
           </div>
         </div>
       </div>
 
       {/* 内容区域 */}
-      <div className="px-4 -mt-4">
+      <div className="px-4 pt-6 space-y-4">
         {restaurants.length === 0 ? (
           // 空状态卡片
-          <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
-            <div className="text-6xl mb-4">🏪</div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">还没有餐厅选项</h3>
-            <p className="text-gray-600 mb-6">添加一些餐厅来开始使用智能推荐系统</p>
-            <button
-              onClick={handleAddRestaurant}
-              className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-8 py-3 rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
-            >
-              添加第一家餐厅
-            </button>
-          </div>
-        ) : (
-          // 餐厅列表
-          <div className="space-y-3">
-            {/* 快速添加按钮 */}
-            <button
-              onClick={handleAddRestaurant}
-              className="w-full p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-dashed border-blue-200 text-blue-600 rounded-2xl hover:border-blue-400 hover:bg-blue-50 transition-all font-medium"
-            >
-              <div className="flex items-center justify-center space-x-2">
-                <span className="text-xl">+</span>
-                <span>添加新餐厅</span>
+          <Card className="text-center">
+            <div className="py-4">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <Store size={32} className="text-secondary" aria-hidden="true" />
               </div>
-            </button>
+              <h3 className="font-semibold text-body mb-2">还没有餐厅选项</h3>
+              <p className="text-caption text-secondary mb-4">
+                添加一些餐厅来开始使用智能推荐系统
+              </p>
+              <Button variant="primary" onClick={handleAddRestaurant}>
+                添加第一家餐厅
+              </Button>
+            </div>
+          </Card>
+        ) : (
+          <>
+            {/* 统计卡片 */}
+            <Card className="p-4">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-title font-semibold">{restaurants.length}</div>
+                  <div className="text-caption text-secondary">总餐厅</div>
+                </div>
+                <div>
+                  <div className="text-title font-semibold">{restaurants.filter(r => r.tier === 'hàng' || r.tier === 'dǐngjí').length}</div>
+                  <div className="text-caption text-secondary">特色餐厅</div>
+                </div>
+                <div>
+                  <div className="text-title font-semibold">{restaurants.filter(r => r.lastSelected).length}</div>
+                  <div className="text-caption text-secondary">已尝试</div>
+                </div>
+              </div>
+            </Card>
 
-            {/* 餐厅卡片列表 */}
-            {restaurants.map((restaurant) => {
-              const tierColors = {
-                'hàng': 'from-yellow-400 to-orange-500',
-                'dǐngjí': 'from-purple-400 to-pink-500',
-                'rénshàngrén': 'from-blue-400 to-indigo-500',
-                'NPC': 'from-gray-400 to-gray-500',
-                'lāwánle': 'from-red-400 to-red-600'
-              };
-
-              const tierTextColors = {
-                'hàng': 'text-yellow-700 bg-yellow-100',
-                'dǐngjí': 'text-purple-700 bg-purple-100',
-                'rénshàngrén': 'text-blue-700 bg-blue-100',
-                'NPC': 'text-gray-700 bg-gray-100',
-                'lāwánle': 'text-red-700 bg-red-100'
-              };
-
-              return (
+            {/* 餐厅列表 */}
+            <div className="space-y-0">
+              {restaurants.map((restaurant) => (
                 <div
                   key={restaurant.id}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all"
+                  className="bg-surface border-b border-divider py-4 first:rounded-t-2xl last:rounded-b-2xl last:border-b-0 hover:bg-muted transition-colors"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-4 flex-1">
-                      {/* 餐厅等级图标 */}
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tierColors[restaurant.tier]} flex items-center justify-center text-white font-bold text-lg shadow-md`}>
-                        {TIER_NAMES[restaurant.tier][0]}
+                  <div className="flex items-center gap-3 px-4">
+                    {/* Avatar */}
+                    <Avatar
+                      initial={getRestaurantInitial(restaurant.name)}
+                      featured={isFeatured(restaurant.tier)}
+                    />
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-body font-medium truncate mb-1">
+                        {restaurant.name}
+                      </h3>
+                      <div className="flex items-center gap-2 text-caption text-secondary">
+                        <span>{TIER_NAMES[restaurant.tier]}</span>
+                        <span>·</span>
+                        <span>{restaurant.mealTypes.map(m => MEAL_TYPE_NAMES[m]).join(' · ')}</span>
                       </div>
-
-                      <div className="flex-1">
-                        {/* 餐厅名称和等级 */}
-                        <div className="flex items-center space-x-2 mb-2">
-                          <h3 className="font-bold text-gray-900 text-lg">{restaurant.name}</h3>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${tierTextColors[restaurant.tier]}`}>
-                            {TIER_NAMES[restaurant.tier]}
-                          </span>
-                        </div>
-
-                        {/* 餐点类型标签 */}
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          {restaurant.mealTypes.map((mealType) => {
-                            const mealEmojis = {
-                              breakfast: '🌅',
-                              lunch: '🍜',
-                              dinner: '🍽️',
-                              snack: '🍿'
-                            };
-                            return (
-                              <span
-                                key={mealType}
-                                className="inline-flex items-center space-x-1 px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-                              >
-                                <span>{mealEmojis[mealType]}</span>
-                                <span>{MEAL_TYPE_NAMES[mealType]}</span>
-                              </span>
-                            );
-                          })}
-                        </div>
-
-                        {/* 统计信息 */}
-                        <div className="flex items-center space-x-4 text-xs text-gray-500">
-                          <div className="flex items-center space-x-1">
-                            <span>✅</span>
-                            <span>{restaurant.selectionCount || 0} 次选择</span>
-                          </div>
-                          {restaurant.lastSelected && (
-                            <div className="flex items-center space-x-1">
-                              <span>📅</span>
-                              <span>最后选择: {new Date(restaurant.lastSelected).toLocaleDateString()}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      {restaurant.lastSelected ? (
+                        <p className="text-caption text-secondary mt-0.5">
+                          {restaurant.selectionCount || 0} 次访问 · 最后 {new Date(restaurant.lastSelected).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })}
+                        </p>
+                      ) : (
+                        <p className="text-caption text-secondary mt-0.5">
+                          0 次访问
+                        </p>
+                      )}
                     </div>
 
-                    {/* 操作按钮 */}
-                    <div className="flex flex-col space-y-2 ml-2">
+                    {/* Actions */}
+                    <div className="flex gap-2 flex-shrink-0">
                       <button
                         onClick={() => handleEditRestaurant(restaurant)}
-                        className="p-2 bg-blue-50 text-blue-600 rounded-lg text-sm hover:bg-blue-100 transition-colors"
-                        title="编辑餐厅"
+                        className="p-2 hover:bg-muted rounded-lg transition-colors"
+                        aria-label={`编辑 ${restaurant.name}`}
                       >
-                        ✏️
+                        <Edit2 size={16} className="text-secondary" />
                       </button>
                       <button
                         onClick={() => handleDeleteRestaurant(restaurant.id, restaurant.name)}
-                        className="p-2 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100 transition-colors"
-                        title="删除餐厅"
+                        className="p-2 hover:bg-muted rounded-lg transition-colors"
+                        aria-label={`删除 ${restaurant.name}`}
                       >
-                        🗑️
+                        <Trash2 size={16} className="text-secondary" />
                       </button>
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              ))}
+            </div>
 
-        {/* 底部间距 */}
-        <div className="h-4"></div>
+            {/* 添加按钮 */}
+            <button
+              onClick={handleAddRestaurant}
+              className="w-full p-4 border-2 border-dashed border-divider text-secondary rounded-2xl hover:border-accent hover:text-accent hover:bg-muted transition-all font-medium"
+              aria-label="添加新餐厅"
+            >
+              <div className="flex items-center justify-center gap-2">
+                <Plus size={20} />
+                <span className="text-body">添加新餐厅</span>
+              </div>
+            </button>
+          </>
+        )}
       </div>
 
       {/* 数据管理弹窗 */}

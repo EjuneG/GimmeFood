@@ -1,9 +1,14 @@
-// 欢迎/首次设置界面组件
+// 欢迎/首次设置界面组件 - Minimalist redesign
+// Clean onboarding flow with subtle animations
 
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Sparkles, Target, Smartphone, Rocket, PartyPopper } from 'lucide-react';
 import { QuickRestaurantForm } from './RestaurantForm.jsx';
 import { useApp } from '../hooks/useApp.js';
 import { useRestaurants } from '../hooks/useRestaurants.js';
+import { Button } from './ui/Button.jsx';
+import { Card } from './ui/Card.jsx';
 
 export function WelcomeScreen() {
   const { dispatch, ActionTypes } = useApp();
@@ -31,14 +36,20 @@ export function WelcomeScreen() {
     dispatch({ type: ActionTypes.COMPLETE_SETUP });
   };
 
+  // Setup screen
   if (currentStep === 'setup') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-        <div className="max-w-md mx-auto pt-8">
+      <div className="min-h-screen bg-background p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="max-w-md mx-auto pt-8"
+        >
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">添加第一个餐厅</h1>
-            <p className="text-gray-600">
-              让我们先添加一些餐厅选项，这样就可以开始使用"给我食物!"功能了
+            <h1 className="text-title font-semibold mb-2">添加第一个餐厅</h1>
+            <p className="text-caption text-secondary">
+              让我们先添加一些餐厅选项，开始使用智能推荐
             </p>
           </div>
 
@@ -46,100 +57,169 @@ export function WelcomeScreen() {
             onSubmit={handleAddRestaurant}
             onSkip={skipSetup}
           />
-        </div>
+        </motion.div>
       </div>
     );
   }
 
+  // Complete screen
   if (currentStep === 'complete') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="max-w-md mx-auto text-center">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <div className="text-6xl mb-4">🎉</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 20 }}
+          className="max-w-md mx-auto w-full"
+        >
+          <Card className="text-center">
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.2 }}
+              className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center"
+            >
+              <PartyPopper className="text-accent" size={32} aria-hidden="true" />
+            </motion.div>
+
+            <h2 className="text-section font-semibold mb-2">
               设置完成！
             </h2>
-            <p className="text-gray-600 mb-6">
-              太棒了！你已经添加了第一个餐厅选项。现在可以开始使用"给我食物!"功能来消除选择疲劳了！
+            <p className="text-body text-secondary mb-6">
+              太棒了！你已经添加了第一个餐厅。<br />
+              现在可以开始使用智能推荐功能了！
             </p>
-            <button
+
+            <Button
+              variant="primary"
+              size="large"
               onClick={completeSetup}
-              className="w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-bold text-lg hover:from-blue-600 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
+              className="w-full"
             >
-              开始使用 🚀
-            </button>
-          </div>
-        </div>
+              <Rocket size={20} />
+              开始使用
+            </Button>
+          </Card>
+        </motion.div>
       </div>
     );
   }
 
-  // 默认欢迎界面
+  // Welcome screen (default)
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-md mx-auto text-center">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-md mx-auto w-full"
+      >
+        <Card className="text-center">
           {/* Logo/Icon */}
-          <div className="text-6xl mb-6">🍽️</div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.1 }}
+            className="w-20 h-20 mx-auto mb-6 rounded-full bg-accent/10 flex items-center justify-center"
+          >
+            <Sparkles className="text-accent" size={40} aria-hidden="true" />
+          </motion.div>
 
           {/* 标题 */}
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+          <h1 className="text-[2rem] font-bold mb-2">
             给我食物!
           </h1>
 
           {/* 副标题 */}
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-section text-secondary mb-8">
             消除选择疲劳的神奇按钮
           </p>
 
           {/* 功能介绍 */}
           <div className="text-left space-y-4 mb-8">
-            <div className="flex items-start space-x-3">
-              <div className="text-2xl">✨</div>
-              <div>
-                <h3 className="font-semibold text-gray-800">智能推荐</h3>
-                <p className="text-sm text-gray-600">根据你的喜好和历史记录智能推荐餐厅</p>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-start gap-3"
+            >
+              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                <Sparkles size={20} className="text-accent" aria-hidden="true" />
               </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="text-2xl">🎯</div>
               <div>
-                <h3 className="font-semibold text-gray-800">消除疲劳</h3>
-                <p className="text-sm text-gray-600">再也不用为吃什么而烦恼，一键解决选择困难</p>
+                <h3 className="font-semibold text-body mb-1">智能推荐</h3>
+                <p className="text-caption text-secondary">
+                  根据你的喜好和历史记录智能推荐餐厅
+                </p>
               </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="text-2xl">📱</div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex items-start gap-3"
+            >
+              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                <Target size={20} className="text-accent" aria-hidden="true" />
+              </div>
               <div>
-                <h3 className="font-semibold text-gray-800">离线使用</h3>
-                <p className="text-sm text-gray-600">数据保存在本地，随时随地可以使用</p>
+                <h3 className="font-semibold text-body mb-1">消除疲劳</h3>
+                <p className="text-caption text-secondary">
+                  再也不用为吃什么而烦恼，一键解决选择困难
+                </p>
               </div>
-            </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              className="flex items-start gap-3"
+            >
+              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                <Smartphone size={20} className="text-accent" aria-hidden="true" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-body mb-1">离线使用</h3>
+                <p className="text-caption text-secondary">
+                  数据保存在本地，随时随地可以使用
+                </p>
+              </div>
+            </motion.div>
           </div>
 
           {/* 按钮组 */}
-          <div className="space-y-3">
-            <button
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="space-y-3"
+          >
+            <Button
+              variant="primary"
+              size="large"
               onClick={startSetup}
-              className="w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-bold text-lg hover:from-blue-600 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
+              className="w-full"
             >
-              开始设置 🚀
-            </button>
-            <button
+              <Rocket size={20} />
+              开始设置
+            </Button>
+            <Button
+              variant="secondary"
               onClick={skipSetup}
-              className="w-full py-3 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+              className="w-full"
             >
               稍后设置
-            </button>
-          </div>
+            </Button>
+          </motion.div>
 
-          {/* 版权信息 */}
-          <p className="text-xs text-gray-400 mt-6">
+          {/* 隐私提示 */}
+          <p className="text-caption text-secondary mt-6">
             所有数据仅保存在您的设备上，完全隐私安全
           </p>
-        </div>
-      </div>
+        </Card>
+      </motion.div>
     </div>
   );
 }

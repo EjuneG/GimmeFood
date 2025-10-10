@@ -1,6 +1,9 @@
-// 现代底部标签导航组件
+// 底部标签导航组件 - Minimalist redesign
+// Clean, monochrome navigation with Lucide icons and spring animations
 
 import React from 'react';
+import { motion } from 'framer-motion';
+import { Home, Sparkles, BarChart3, Settings } from 'lucide-react';
 import { useApp } from '../hooks/useApp.js';
 import { ActionTypes } from '../constants/index.js';
 
@@ -12,31 +15,31 @@ export function BottomTabNavigation() {
     {
       id: 'main',
       label: '首页',
-      icon: '🏠',
-      activeIcon: '🏠',
-      active: currentStep === 'main'
+      Icon: Home,
+      active: currentStep === 'main',
+      ariaLabel: '首页导航'
     },
     {
       id: 'gimme-food',
       label: '给我食物',
-      icon: '🎲',
-      activeIcon: '🎲',
+      Icon: Sparkles,
       special: true, // 特殊按钮样式
-      active: ['question', 'mealType', 'result', 'reselection'].includes(currentStep)
+      active: ['question', 'mealType', 'result', 'reselection'].includes(currentStep),
+      ariaLabel: '随机推荐'
     },
     {
       id: 'nutrition_dashboard',
       label: '营养',
-      icon: '📊',
-      activeIcon: '📊',
-      active: ['nutrition_dashboard', 'nutrition_goal_setup', 'nutrition_prompt', 'nutrition_input', 'nutrition_result'].includes(currentStep)
+      Icon: BarChart3,
+      active: ['nutrition_dashboard', 'nutrition_goal_setup', 'nutrition_prompt', 'nutrition_input', 'nutrition_result'].includes(currentStep),
+      ariaLabel: '营养追踪'
     },
     {
       id: 'management',
       label: '管理',
-      icon: '⚙️',
-      activeIcon: '⚙️',
-      active: currentStep === 'management'
+      Icon: Settings,
+      active: currentStep === 'management',
+      ariaLabel: '餐厅管理'
     }
   ];
 
@@ -62,51 +65,76 @@ export function BottomTabNavigation() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-      <div className="max-w-md mx-auto px-2 py-2">
-        <div className="flex items-center justify-around">
-          {tabs.map((tab) => (
+    <nav
+      className="fixed bottom-0 left-0 right-0 bg-surface border-t border-divider z-50 shadow-lg"
+      aria-label="主导航"
+    >
+      <div className="max-w-md mx-auto flex items-center justify-around h-16 safe-bottom">
+        {tabs.map((tab) => {
+          const { id, label, Icon, active, special, ariaLabel } = tab;
+
+          return (
             <button
-              key={tab.id}
-              onClick={() => handleTabClick(tab.id)}
-              className={`relative flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-200 ${
-                tab.special
-                  ? tab.active
-                    ? 'bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-lg scale-110 -translate-y-2'
-                    : 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-md hover:scale-105'
-                  : tab.active
-                  ? 'bg-blue-100 text-blue-600 scale-105'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-              }`}
+              key={id}
+              onClick={() => handleTabClick(id)}
+              className={`
+                flex flex-col items-center justify-center
+                w-full h-full
+                transition-colors duration-base
+                ${active ? 'text-accent' : 'text-secondary'}
+                ${!special && 'hover:text-primary'}
+              `}
+              aria-label={ariaLabel}
+              aria-current={active ? 'page' : undefined}
             >
-              {tab.special && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
-              )}
-
-              <div className={`text-xl mb-1 ${tab.special ? 'animate-bounce' : ''}`}>
-                {tab.active ? tab.activeIcon : tab.icon}
-              </div>
-
-              <span className={`text-xs font-medium ${
-                tab.special
-                  ? 'text-white'
-                  : tab.active
-                    ? 'text-blue-600'
-                    : 'text-gray-500'
-              }`}>
-                {tab.label}
+              <motion.div
+                animate={{
+                  scale: active ? 1.1 : 1,
+                  y: active ? -2 : 0
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 25
+                }}
+              >
+                <Icon
+                  size={22}
+                  strokeWidth={active ? 2.5 : 2}
+                  aria-hidden="true"
+                />
+              </motion.div>
+              <span
+                className={`
+                  text-[11px] mt-1
+                  ${active ? 'font-semibold' : 'font-regular'}
+                `}
+              >
+                {label}
               </span>
 
-              {tab.active && !tab.special && (
-                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
+              {/* Active indicator */}
+              {active && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute -bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-accent rounded-full"
+                  initial={false}
+                  transition={{
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30
+                  }}
+                />
               )}
             </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      {/* Safe area for iPhone home indicator */}
-      <div className="h-safe-bottom bg-white"></div>
-    </div>
+      {/* Screen reader only text for active tab */}
+      <span className="sr-only">
+        当前页面: {tabs.find(t => t.active)?.label}
+      </span>
+    </nav>
   );
 }

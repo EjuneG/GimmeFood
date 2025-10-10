@@ -1,7 +1,11 @@
-// 餐厅输入表单组件
+// 餐厅输入表单组件 - Minimalist redesign
+// Clean form with proper validation and accessibility
 
 import React, { useState } from 'react';
+import { X, Check } from 'lucide-react';
 import { TIER_NAMES, TIERS, MEAL_TYPE_NAMES, MEAL_TYPES } from '../utils/storage.js';
+import { Button } from './ui/Button.jsx';
+import { Card } from './ui/Card.jsx';
 
 export function RestaurantForm({ onSubmit, onCancel, initialData = null }) {
   const [formData, setFormData] = useState({
@@ -43,104 +47,172 @@ export function RestaurantForm({ onSubmit, onCancel, initialData = null }) {
       : [...formData.mealTypes, mealType];
 
     setFormData({ ...formData, mealTypes: newMealTypes });
+    // 清除错误
+    if (newMealTypes.length > 0 && errors.mealTypes) {
+      setErrors({ ...errors, mealTypes: undefined });
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen bg-background p-4 pb-20">
       <div className="max-w-md mx-auto pt-8">
-        <div className="bg-white rounded-2xl shadow-xl p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-            {initialData ? '编辑餐厅' : '添加餐厅'}
-          </h2>
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-title font-semibold">
+              {initialData ? '编辑餐厅' : '添加餐厅'}
+            </h2>
+            {onCancel && (
+              <button
+                onClick={onCancel}
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                aria-label="关闭"
+              >
+                <X size={20} className="text-secondary" />
+              </button>
+            )}
+          </div>
+          <p className="text-caption text-secondary">
+            {initialData ? '修改餐厅信息' : '添加新的餐厅选项'}
+          </p>
+        </div>
 
+        <Card>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* 餐厅名称 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                餐厅名称 *
+              <label htmlFor="restaurant-name" className="block text-body font-medium mb-2">
+                餐厅名称 <span className="text-accent">*</span>
               </label>
               <input
+                id="restaurant-name"
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                  errors.name ? 'border-red-300' : 'border-gray-200'
-                }`}
-                placeholder="输入餐厅名称..."
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.target.value });
+                  if (errors.name && e.target.value.trim()) {
+                    setErrors({ ...errors, name: undefined });
+                  }
+                }}
+                className={`w-full px-4 py-3 border-2 rounded-xl bg-surface
+                  focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent
+                  transition-all text-body
+                  ${errors.name ? 'border-accent' : 'border-divider'}
+                `}
+                placeholder="例如: 上海小馄饨"
+                aria-invalid={!!errors.name}
+                aria-describedby={errors.name ? "name-error" : undefined}
               />
               {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                <p id="name-error" className="text-accent text-caption mt-1.5" role="alert">
+                  {errors.name}
+                </p>
               )}
             </div>
 
             {/* 等级选择 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-body font-medium mb-3">
                 餐厅等级
               </label>
               <div className="grid grid-cols-5 gap-2">
-                {Object.entries(TIERS).map(([, value]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, tier: value })}
-                    className={`py-2 px-1 text-sm font-medium rounded-lg transition-all ${
-                      formData.tier === value
-                        ? 'bg-blue-500 text-white shadow-lg scale-105'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {TIER_NAMES[value]}
-                  </button>
-                ))}
+                {Object.entries(TIERS).map(([, value]) => {
+                  const isSelected = formData.tier === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, tier: value })}
+                      className={`
+                        py-2 px-1 text-caption font-medium rounded-lg
+                        transition-all duration-base
+                        ${isSelected
+                          ? 'bg-accent text-white shadow-md scale-105'
+                          : 'bg-muted text-secondary hover:bg-divider hover:text-primary'
+                        }
+                      `}
+                      aria-pressed={isSelected}
+                      aria-label={`选择等级: ${TIER_NAMES[value]}`}
+                    >
+                      {TIER_NAMES[value]}
+                    </button>
+                  );
+                })}
               </div>
+              <p className="text-caption text-secondary mt-2">
+                等级影响推荐权重，越高优先级越高
+              </p>
             </div>
 
             {/* 餐点类型选择 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                适用餐点 *
+              <label className="block text-body font-medium mb-3">
+                适用餐点 <span className="text-accent">*</span>
               </label>
               <div className="grid grid-cols-2 gap-3">
-                {Object.entries(MEAL_TYPES).map(([, value]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => toggleMealType(value)}
-                    className={`py-3 px-4 text-sm font-medium rounded-xl transition-all ${
-                      formData.mealTypes.includes(value)
-                        ? 'bg-blue-500 text-white shadow-lg'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {MEAL_TYPE_NAMES[value]}
-                  </button>
-                ))}
+                {Object.entries(MEAL_TYPES).map(([, value]) => {
+                  const isSelected = formData.mealTypes.includes(value);
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => toggleMealType(value)}
+                      className={`
+                        py-3 px-4 text-body font-medium rounded-xl
+                        transition-all duration-base
+                        flex items-center justify-center gap-2
+                        ${isSelected
+                          ? 'bg-accent text-white shadow-md'
+                          : 'bg-muted text-secondary hover:bg-divider hover:text-primary border border-divider'
+                        }
+                      `}
+                      aria-pressed={isSelected}
+                      aria-label={`${isSelected ? '取消选择' : '选择'} ${MEAL_TYPE_NAMES[value]}`}
+                    >
+                      {isSelected && <Check size={16} />}
+                      {MEAL_TYPE_NAMES[value]}
+                    </button>
+                  );
+                })}
               </div>
               {errors.mealTypes && (
-                <p className="text-red-500 text-sm mt-2">{errors.mealTypes}</p>
+                <p className="text-accent text-caption mt-2" role="alert">
+                  {errors.mealTypes}
+                </p>
               )}
+              <p className="text-caption text-secondary mt-2">
+                可以选择多个餐点类型
+              </p>
             </div>
 
             {/* 按钮组 */}
-            <div className="flex space-x-3 pt-4">
+            <div className="flex gap-3 pt-4 border-t border-divider">
               {onCancel && (
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={onCancel}
-                  className="flex-1 py-3 px-4 bg-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-400 transition-colors"
+                  className="flex-1"
                 >
                   取消
-                </button>
+                </Button>
               )}
-              <button
+              <Button
                 type="submit"
-                className="flex-1 py-3 px-4 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors shadow-lg"
+                variant="primary"
+                className="flex-1"
               >
                 {initialData ? '更新' : '添加'}
-              </button>
+              </Button>
             </div>
           </form>
+        </Card>
+
+        {/* Helper tip */}
+        <div className="mt-4 px-2">
+          <p className="text-caption text-secondary text-center">
+            💡 添加后可以在管理页面随时编辑
+          </p>
         </div>
       </div>
     </div>
@@ -176,31 +248,39 @@ export function QuickRestaurantForm({ onSubmit, onSkip }) {
     );
   };
 
+  const isValid = name.trim() && selectedMealTypes.length > 0;
+
   return (
-    <div className="bg-white rounded-xl p-4 shadow-lg">
+    <Card className="p-4">
       <form onSubmit={handleSubmit} className="space-y-4">
+        <h3 className="text-body font-semibold mb-3">快速添加餐厅</h3>
+
         {/* 餐厅名称 */}
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="餐厅名称..."
-          className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500"
+          className="w-full px-3 py-2.5 border-2 border-divider rounded-lg
+            focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20
+            transition-all text-body bg-surface"
           required
         />
 
         {/* 等级选择 */}
-        <div className="grid grid-cols-5 gap-1">
+        <div className="grid grid-cols-5 gap-1.5">
           {Object.entries(TIERS).map(([, value]) => (
             <button
               key={value}
               type="button"
               onClick={() => setTier(value)}
-              className={`py-1 px-1 text-xs font-medium rounded ${
-                tier === value
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-700'
-              }`}
+              className={`py-1.5 text-[11px] font-medium rounded transition-all
+                ${tier === value
+                  ? 'bg-accent text-white'
+                  : 'bg-muted text-secondary hover:bg-divider'
+                }
+              `}
+              aria-pressed={tier === value}
             >
               {TIER_NAMES[value]}
             </button>
@@ -209,40 +289,51 @@ export function QuickRestaurantForm({ onSubmit, onSkip }) {
 
         {/* 餐点类型 */}
         <div className="grid grid-cols-2 gap-2">
-          {Object.entries(MEAL_TYPES).map(([, value]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => toggleMealType(value)}
-              className={`py-2 px-3 text-sm font-medium rounded-lg ${
-                selectedMealTypes.includes(value)
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-700'
-              }`}
-            >
-              {MEAL_TYPE_NAMES[value]}
-            </button>
-          ))}
+          {Object.entries(MEAL_TYPES).map(([, value]) => {
+            const isSelected = selectedMealTypes.includes(value);
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => toggleMealType(value)}
+                className={`py-2 px-3 text-caption font-medium rounded-lg transition-all
+                  flex items-center justify-center gap-1.5
+                  ${isSelected
+                    ? 'bg-accent text-white'
+                    : 'bg-muted text-secondary hover:bg-divider'
+                  }
+                `}
+                aria-pressed={isSelected}
+              >
+                {isSelected && <Check size={14} />}
+                {MEAL_TYPE_NAMES[value]}
+              </button>
+            );
+          })}
         </div>
 
         {/* 按钮 */}
-        <div className="flex space-x-2">
-          <button
+        <div className="flex gap-2 pt-2">
+          <Button
             type="button"
+            variant="secondary"
             onClick={onSkip}
-            className="flex-1 py-2 px-4 bg-gray-300 text-gray-700 rounded-lg font-medium"
+            size="small"
+            className="flex-1"
           >
             稍后添加
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={!name.trim() || selectedMealTypes.length === 0}
-            className="flex-1 py-2 px-4 bg-blue-500 text-white rounded-lg font-medium disabled:bg-gray-300 disabled:text-gray-500"
+            variant="primary"
+            size="small"
+            disabled={!isValid}
+            className="flex-1"
           >
             添加餐厅
-          </button>
+          </Button>
         </div>
       </form>
-    </div>
+    </Card>
   );
 }
