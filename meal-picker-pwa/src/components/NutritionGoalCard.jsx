@@ -11,7 +11,7 @@ export function NutritionGoalCard() {
   const { state, dispatch, ActionTypes } = useApp();
   const hasGoal = state.nutritionGoal !== null;
   const targetDate = state.nutrition.targetDate || 'today';
-  const [viewMode, setViewMode] = useState('daily'); // 'daily' or 'weekly'
+  const [showWeekly, setShowWeekly] = useState(false);
 
   // Get data based on selected date
   const dayTotal = targetDate === 'yesterday' ? getYesterdayTotal() : getTodayTotal();
@@ -123,123 +123,90 @@ export function NutritionGoalCard() {
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
       {/* 标题栏 */}
       <div className="p-4 border-b border-gray-100">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <span className="text-2xl">📊</span>
             <div>
               <h3 className="font-bold text-gray-900">
-                {viewMode === 'daily'
-                  ? (targetDate === 'yesterday' ? '昨日营养' : '今日营养')
-                  : '本周统计'}
+                {targetDate === 'yesterday' ? '昨日营养' : '今日营养'}
               </h3>
               <p className="text-xs text-gray-500">目标追踪</p>
             </div>
           </div>
-          <button
-            onClick={handleSetupGoal}
-            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-          >
-            调整目标
-          </button>
-        </div>
-
-        {/* Date selector (only show in daily view) */}
-        {viewMode === 'daily' && (
-          <div className="flex gap-2 mb-2">
+          <div className="flex items-center space-x-2">
+            {/* Small date toggle */}
+            <div className="flex rounded-lg bg-gray-100 p-0.5">
+              <button
+                onClick={() => handleDateChange('today')}
+                className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                  targetDate === 'today'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                今天
+              </button>
+              <button
+                onClick={() => handleDateChange('yesterday')}
+                className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                  targetDate === 'yesterday'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                昨天
+              </button>
+            </div>
             <button
-              onClick={() => handleDateChange('today')}
-              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${
-                targetDate === 'today'
-                  ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              onClick={handleSetupGoal}
+              className="text-xs text-blue-600 hover:text-blue-700 font-medium"
             >
-              今天
-            </button>
-            <button
-              onClick={() => handleDateChange('yesterday')}
-              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${
-                targetDate === 'yesterday'
-                  ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              昨天
+              调整目标
             </button>
           </div>
-        )}
-
-        {/* View toggle buttons */}
-        <div className="flex gap-2">
-          <button
-            onClick={() => setViewMode('daily')}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
-              viewMode === 'daily'
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            每日
-          </button>
-          <button
-            onClick={() => setViewMode('weekly')}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
-              viewMode === 'weekly'
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            本周
-          </button>
         </div>
       </div>
 
-      {/* 内容区域 - 根据viewMode显示不同内容 */}
+      {/* Daily progress bars */}
       <div className="p-4">
-        {viewMode === 'daily' ? (
-          // 今日进度条
-          <div className="space-y-3">
-            {nutrients.map(nutrient => {
-              const progress = calculateProgress(nutrient.current, nutrient.target);
-              const status = getProgressStatus(progress);
-              const progressWidth = Math.min(progress, 100);
+        <div className="space-y-3">
+          {nutrients.map(nutrient => {
+            const progress = calculateProgress(nutrient.current, nutrient.target);
+            const status = getProgressStatus(progress);
+            const progressWidth = Math.min(progress, 100);
 
-              return (
-                <div key={nutrient.name}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center space-x-1">
-                      <span className="text-sm">{nutrient.emoji}</span>
-                      <span className="text-sm font-medium text-gray-700">{nutrient.name}</span>
-                    </div>
-                    <div className="text-sm">
-                      <span className={`font-bold ${
-                        status === 'good' ? 'text-green-600' :
-                        status === 'low' ? 'text-gray-600' :
-                        'text-red-600'
-                      }`}>
-                        {nutrient.current}
-                      </span>
-                      <span className="text-gray-500">/{nutrient.target}{nutrient.unit}</span>
-                    </div>
+            return (
+              <div key={nutrient.name}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center space-x-1">
+                    <span className="text-sm">{nutrient.emoji}</span>
+                    <span className="text-sm font-medium text-gray-700">{nutrient.name}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${getColorClasses(nutrient.color, status)}`}
-                      style={{ width: `${progressWidth}%` }}
-                    ></div>
+                  <div className="text-sm">
+                    <span className={`font-bold ${
+                      status === 'good' ? 'text-green-600' :
+                      status === 'low' ? 'text-gray-600' :
+                      'text-red-600'
+                    }`}>
+                      {nutrient.current}
+                    </span>
+                    <span className="text-gray-500">/{nutrient.target}{nutrient.unit}</span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          // 本周统计
-          <WeeklyNutritionView />
-        )}
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${getColorClasses(nutrient.color, status)}`}
+                    style={{ width: `${progressWidth}%` }}
+                  ></div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* 提示信息 */}
-      {viewMode === 'daily' && goal.note && (
+      {goal.note && (
         <div className="px-4 pb-4">
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
             <p className="text-xs text-indigo-700">
@@ -248,6 +215,28 @@ export function NutritionGoalCard() {
           </div>
         </div>
       )}
+
+      {/* 本周统计 (Collapsible) */}
+      <div className="border-t border-gray-100">
+        <button
+          onClick={() => setShowWeekly(!showWeekly)}
+          className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-center space-x-2">
+            <span className="text-lg">📈</span>
+            <span className="text-sm font-medium text-gray-700">本周统计</span>
+          </div>
+          <span className="text-gray-400 text-sm">
+            {showWeekly ? '▲' : '▼'}
+          </span>
+        </button>
+
+        {showWeekly && (
+          <div className="px-4 pb-4 pt-2">
+            <WeeklyNutritionView />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
