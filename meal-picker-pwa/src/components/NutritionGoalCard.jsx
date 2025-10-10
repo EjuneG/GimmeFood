@@ -3,22 +3,17 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../hooks/useApp.js';
-import { getTodayTotal, getYesterdayTotal } from '../utils/nutritionStorage.js';
+import { getTodayTotal } from '../utils/nutritionStorage.js';
 import { calculateProgress, getProgressStatus } from '../utils/nutritionGoalStorage.js';
 import { WeeklyNutritionView } from './WeeklyNutritionView.jsx';
 
 export function NutritionGoalCard() {
   const { state, dispatch, ActionTypes } = useApp();
   const hasGoal = state.nutritionGoal !== null;
-  const targetDate = state.nutrition.targetDate || 'today';
   const [showWeekly, setShowWeekly] = useState(false);
 
-  // Get data based on selected date
-  const dayTotal = targetDate === 'yesterday' ? getYesterdayTotal() : getTodayTotal();
-
-  const handleDateChange = (newDate) => {
-    dispatch({ type: ActionTypes.SET_TARGET_DATE, payload: newDate });
-  };
+  // Get today's data (with 4AM boundary applied automatically)
+  const todayTotal = getTodayTotal();
 
   const handleSetupGoal = () => {
     dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'nutrition_goal_setup' });
@@ -53,7 +48,7 @@ export function NutritionGoalCard() {
   const nutrients = [
     {
       name: '热量',
-      current: dayTotal.calories,
+      current: todayTotal.calories,
       target: goal.calories,
       unit: '千卡',
       color: 'orange',
@@ -61,7 +56,7 @@ export function NutritionGoalCard() {
     },
     {
       name: '蛋白质',
-      current: dayTotal.protein,
+      current: todayTotal.protein,
       target: goal.protein,
       unit: 'g',
       color: 'blue',
@@ -69,7 +64,7 @@ export function NutritionGoalCard() {
     },
     {
       name: '碳水',
-      current: dayTotal.carbs,
+      current: todayTotal.carbs,
       target: goal.carbs,
       unit: 'g',
       color: 'yellow',
@@ -77,7 +72,7 @@ export function NutritionGoalCard() {
     },
     {
       name: '脂肪',
-      current: dayTotal.fat,
+      current: todayTotal.fat,
       target: goal.fat,
       unit: 'g',
       color: 'purple',
@@ -127,43 +122,16 @@ export function NutritionGoalCard() {
           <div className="flex items-center space-x-2">
             <span className="text-2xl">📊</span>
             <div>
-              <h3 className="font-bold text-gray-900">
-                {targetDate === 'yesterday' ? '昨日营养' : '今日营养'}
-              </h3>
+              <h3 className="font-bold text-gray-900">今日营养</h3>
               <p className="text-xs text-gray-500">目标追踪</p>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            {/* Small date toggle */}
-            <div className="flex rounded-lg bg-gray-100 p-0.5">
-              <button
-                onClick={() => handleDateChange('today')}
-                className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                  targetDate === 'today'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                今天
-              </button>
-              <button
-                onClick={() => handleDateChange('yesterday')}
-                className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                  targetDate === 'yesterday'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                昨天
-              </button>
-            </div>
-            <button
-              onClick={handleSetupGoal}
-              className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-            >
-              调整目标
-            </button>
-          </div>
+          <button
+            onClick={handleSetupGoal}
+            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+          >
+            调整目标
+          </button>
         </div>
       </div>
 

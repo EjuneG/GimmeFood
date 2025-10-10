@@ -10,7 +10,6 @@ import { getRestaurantDishes, getCachedNutritionData } from '../utils/nutritionS
 export function NutritionInput() {
   const { state, dispatch, ActionTypes } = useApp();
   const { selectedRestaurant, selectedMealType } = state.currentFlow;
-  const targetDate = state.nutrition.targetDate || 'today';
   const [foodInput, setFoodInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -143,18 +142,6 @@ export function NutritionInput() {
               简单描述即可，AI会帮你分析营养
             </p>
           </div>
-
-          {/* 日期指示器 */}
-          {targetDate === 'yesterday' && (
-            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <p className="text-sm text-amber-800 text-center">
-                📅 将记录到<strong>昨天</strong>的数据
-              </p>
-              <p className="text-xs text-amber-600 text-center mt-1">
-                可在主页切换日期
-              </p>
-            </div>
-          )}
 
           {/* 餐厅/做饭信息 */}
           {selectedRestaurant && (

@@ -15,22 +15,12 @@ const STORAGE_KEY = 'gimmefood_nutrition_history';
  * @param {number} record.carbs - 碳水化合物(克)
  * @param {number} record.fat - 脂肪(克)
  * @param {string} record.note - 营养提示
- * @param {string} [targetDate] - 可选：指定记录到哪一天 ('today' | 'yesterday' | null)
  */
-export function saveNutritionRecord(record, targetDate = null) {
+export function saveNutritionRecord(record) {
   const history = getNutritionHistory();
 
-  // 确定记录的日期
-  let nutritionDate;
-  if (targetDate === 'yesterday') {
-    // 记录到昨天
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    nutritionDate = yesterday.toLocaleDateString('zh-CN');
-  } else {
-    // 默认使用getNutritionDate()，会考虑day boundary
-    nutritionDate = getNutritionDate();
-  }
+  // 使用getNutritionDate()，会自动考虑day boundary设置
+  const nutritionDate = getNutritionDate();
 
   const newRecord = {
     ...record,
