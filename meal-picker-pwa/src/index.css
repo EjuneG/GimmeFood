@@ -1,3 +1,55 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Base styles for minimalist design */
+@layer base {
+  body {
+    @apply bg-background text-primary font-sans antialiased;
+    font-size: 15px; /* Base body text size for Chinese character readability */
+  }
+
+  /* Focus styles for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Support for reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Custom utility layer for animations */
+@layer utilities {
+  /* Button press animation */
+  .btn-press {
+    @apply active:scale-[0.98] transition-transform duration-base;
+  }
+
+  /* Button hover animation */
+  .btn-hover {
+    @apply hover:scale-[1.02] transition-transform duration-fast;
+  }
+
+  /* Icon rotate animation */
+  .icon-spin {
+    @apply hover:rotate-180 transition-transform duration-slow;
+  }
+
+  /* GPU-accelerated animations */
+  .will-animate {
+    will-change: transform, opacity;
+  }
+}

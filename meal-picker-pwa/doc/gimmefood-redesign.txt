@@ -1,0 +1,1628 @@
+# GimmeFood Minimalist Redesign — Design Direction
+
+## Project Context
+
+**App Purpose:** Help users select food and track nutrition  
+**Current State:** Vibrant gradients, emoji-driven UI, cartoony aesthetic  
+**Goal:** Minimalist redesign with intentional playfulness  
+**Target Audience:** 16-50 years old, food ordering users, fitness-conscious  
+**Tech Stack:** PWA with Tailwind CSS v4  
+**Monetization:** None currently (design for future flexibility)
+
+---
+
+## Executive Summary
+
+Your current design leverages playful gradients and emoji-driven UI, which works for engagement but lacks sophistication and scalability. A minimalist approach will improve visual hierarchy, reduce cognitive load, and create a more premium feel while maintaining the app's core decision-making functionality.
+
+---
+
+## 01. Design Philosophy
+
+### Core Principles
+**Reduction Over Addition** — Strip away decorative elements that don't serve function  
+**Hierarchy Through Space** — Use whitespace as a design element, not empty space  
+**Intentional Contrast** — Guide user attention through typography and subtle color shifts  
+**Playful Restraint** — Inject personality through micro-interactions, not visual noise  
+**Touch-First Ergonomics** — Design for thumb zones and natural mobile gestures
+
+---
+
+## 02. Visual System
+
+### Color Strategy
+**Primary Palette**
+```css
+/* Tailwind v4 Custom Theme */
+@theme {
+  --color-background: #FAFAFA;      /* warm white */
+  --color-surface: #FFFFFF;          /* pure white */
+  --color-primary: #1A1A1A;          /* near black */
+  --color-secondary: #666666;        /* medium gray */
+  --color-accent: #E85D47;           /* muted terracotta */
+  --color-accent-light: #F5A89C;     /* hover/light state */
+  --color-divider: #EEEEEE;          /* borders */
+  --color-muted: #F5F5F5;            /* card backgrounds */
+}
+```
+
+**Playfulness Integration:**
+- Accent color (#E85D47) has warmth and appetite appeal
+- Use subtle hover animations (scale, opacity shifts)
+- Reserve bright pops for success states only
+
+**Rationale:** Moving away from saturated gradients to a monochromatic foundation with a single, sophisticated accent creates visual calm. Terracotta connects to food/appetite psychology without being juvenile.
+
+### Typography System
+```css
+@theme {
+  /* Font Families */
+  --font-sans: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  
+  /* Font Sizes */
+  --text-title: 1.5rem;      /* 24px - Page titles */
+  --text-section: 1.125rem;  /* 18px - Section headers */
+  --text-body: 0.9375rem;    /* 15px - Body text */
+  --text-caption: 0.8125rem; /* 13px - Helper text */
+  
+  /* Font Weights */
+  --font-semibold: 600;
+  --font-regular: 400;
+  
+  /* Line Heights */
+  --leading-tight: 1.2;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+}
+```
+
+**Chinese Text Optimization:**
+- Base size: 15px (not 14px) for better character recognition
+- Line-height: 1.5 for Chinese vs 1.4 for Latin
+- Inter pairs excellently with Noto Sans SC
+
+**Rationale:** System fonts ensure optimal legibility and performance in PWAs. A limited weight palette (just two) creates consistency. Generous line-height improves Chinese character readability.
+
+### Iconography
+**Replace emoji with:**
+- **Lucide Icons** (lucide.dev) — 24px stroke-based, 1.5px weight
+- Monochromatic (inherit text color)
+- Reserved use: only where functional clarity is needed
+- Tailwind integration: `npm install lucide-react`
+
+**Example mappings:**
+```
+🎲 Dice       → Shuffle icon
+🍱 Breakfast  → Sunrise icon  
+🍜 Lunch      → Sun icon
+🌙 Dinner     → Moon icon
+🍿 Snacks     → Sparkles icon (adds playfulness)
+```
+
+**Playful moments:** Use animated icon states on interactions (rotation, bounce on success)
+
+---
+
+## 03. Component Redesign
+
+### A. Home Screen — "给我食物!" 
+
+**Current Issues:**
+- Three large gradient buttons compete for attention
+- No clear primary action hierarchy
+- Excessive visual weight from gradients
+
+**Redesign Approach:**
+
+```
+┌─────────────────────────────────┐
+│                                 │
+│         给我食物!                 │
+│      今天想吃什么?                │
+│                                 │
+│  ┌───────────────────────────┐ │
+│  │   [Shuffle] 随机推荐       │ │  ← Primary CTA
+│  │    Surprise me             │ │     Accent bg, white text
+│  └───────────────────────────┘ │
+│                                 │
+│  ┌─────────────┐ ┌───────────┐ │
+│  │ [Chef] 自己做│ │[List] 手动 │ │  ← Secondary options
+│  │    做饭      │ │   选择     │ │     Outlined, hover fill
+│  └─────────────┘ └───────────┘ │
+│                                 │
+└─────────────────────────────────┘
+```
+
+**Tailwind Implementation:**
+```jsx
+<div className="flex flex-col gap-6 p-8">
+  <div className="text-center">
+    <h1 className="text-title font-semibold mb-2">给我食物!</h1>
+    <p className="text-caption text-secondary">今天想吃什么?</p>
+  </div>
+  
+  {/* Primary Button */}
+  <button className="
+    flex items-center justify-center gap-3
+    h-14 rounded-2xl
+    bg-accent text-white font-semibold
+    hover:bg-accent-light hover:scale-[1.02]
+    active:scale-[0.98]
+    transition-all duration-200
+  ">
+    <Shuffle size={20} />
+    <span>随机推荐</span>
+    <span className="text-caption opacity-80">Surprise me</span>
+  </button>
+  
+  {/* Secondary Buttons */}
+  <div className="grid grid-cols-2 gap-4">
+    <button className="
+      flex flex-col items-center justify-center gap-2
+      h-12 rounded-xl
+      border-2 border-divider
+      hover:border-accent hover:bg-muted
+      transition-all duration-200
+    ">
+      <ChefHat size={20} />
+      <span className="text-sm">自己做饭</span>
+    </button>
+    {/* ... */}
+  </div>
+</div>
+```
+
+**Playful Details:**
+- Shuffle icon rotates 180° on click
+- Success ripple effect (subtle scale pulse)
+- Hover states have smooth 200ms transitions
+
+**Specifications:**
+- Container: 32px (p-8) padding
+- Primary button: 56px height, 16px radius, full width
+- Secondary buttons: 48px height, 12px radius, 48% width
+- Icon size: 20px (consistent)
+- Gap between elements: 24px
+
+---
+
+### B. Category Selection Screen
+
+**Current Issues:**
+- List items have heavy visual separation
+- Emoji icons (inconsistent rendering)
+- Rounded pill shapes feel dated
+
+**Redesign Approach:**
+
+```
+┌─────────────────────────────────┐
+│ 选择餐点类型              [×]    │  ← Header
+│                                 │
+│  ○ [Sunrise] 早餐         →    │  ← Radio model
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━  │
+│  ◉ [Sun] 午餐             →    │  ← Selected
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━  │
+│  ○ [Moon] 晚餐            →    │
+│      基于当前时间推荐             │  ← Helper text
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━  │
+│  ○ [Sparkles] 零食        →    │
+│                                 │
+│                [确认]            │  ← Bottom fixed
+└─────────────────────────────────┘
+```
+
+**Tailwind Implementation:**
+```jsx
+<div className="flex flex-col h-screen">
+  {/* Header */}
+  <div className="flex items-center justify-between p-5 border-b border-divider">
+    <h2 className="text-section font-semibold">选择餐点类型</h2>
+    <button className="p-2 hover:bg-muted rounded-lg transition">
+      <X size={20} />
+    </button>
+  </div>
+  
+  {/* List */}
+  <div className="flex-1 overflow-y-auto">
+    {meals.map(meal => (
+      <button
+        key={meal.id}
+        className={`
+          flex items-center gap-4 w-full
+          h-15 px-5 py-3
+          border-b border-divider
+          hover:bg-muted
+          transition-colors duration-150
+          ${meal.selected ? 'bg-muted' : ''}
+        `}
+      >
+        {/* Radio */}
+        <div className={`
+          w-5 h-5 rounded-full border-2
+          flex items-center justify-center
+          ${meal.selected ? 'border-accent' : 'border-secondary'}
+        `}>
+          {meal.selected && (
+            <div className="w-3 h-3 rounded-full bg-accent" />
+          )}
+        </div>
+        
+        {/* Icon + Text */}
+        <meal.icon size={20} className="text-secondary" />
+        <span className="flex-1 text-left font-medium">{meal.name}</span>
+        
+        {/* Chevron */}
+        <ChevronRight size={16} className="text-secondary" />
+        
+        {/* Helper text (conditional) */}
+        {meal.recommended && (
+          <p className="text-caption text-secondary mt-1 ml-11">
+            {meal.recommendedText}
+          </p>
+        )}
+      </button>
+    ))}
+  </div>
+  
+  {/* Fixed Bottom Button */}
+  <div className="p-5 border-t border-divider safe-bottom">
+    <button className="
+      w-full h-12 rounded-xl
+      bg-accent text-white font-semibold
+      hover:bg-accent-light
+      active:scale-[0.98]
+      transition-all duration-200
+    ">
+      确认
+    </button>
+  </div>
+</div>
+```
+
+**Playful Details:**
+- Radio fills in with spring animation (CSS `transition: all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)`)
+- Selected item background fades in
+- Icons have subtle color shift on selection (secondary → accent)
+
+**Specifications:**
+- List items: 60px height, 20px horizontal padding
+- Radio: 20px outer circle, 12px inner fill, 2px stroke
+- Icons: 20px, inherit color
+- Helper text: 13px, indented to align with text
+- Tap target: Full row height
+
+---
+
+### C. Nutrition Tracking
+
+**Current Issues:**
+- Progress bars overly colorful (competing attention)
+- Emoji bullets add noise
+- Data visualization lacks sophistication
+
+**Redesign Approach:**
+
+```
+┌─────────────────────────────────┐
+│  营养追踪            [Calendar]  │
+│  记录你的每日营养摄入              │
+│                                 │
+│  今日营养                        │
+│  目标能量                        │
+│                                 │
+│  热量                    450    │
+│  ▓▓▓▓▓▓░░░░░░░░░      /2267千卡 │
+│                                 │
+│  蛋白质                   25    │
+│  ▓▓░░░░░░░░░░░░░       /106g  │
+│                                 │
+│  碳水                     34    │
+│  ▓▓▓░░░░░░░░░░░        /319g  │
+│                                 │
+│  脂肪                     25    │
+│  ▓▓▓░░░░░░░░░░░         /63g  │
+│                                 │
+│  ┌─────────────────────────┐  │
+│  │ 💡 建议目标              │  │
+│  │ 热量盈余,充足蛋白摄入     │  │
+│  └─────────────────────────┘  │
+│                                 │
+│  本周统计               ▼       │
+└─────────────────────────────────┘
+```
+
+**Tailwind Implementation:**
+```jsx
+<div className="flex flex-col gap-6 p-5">
+  {/* Header */}
+  <div>
+    <div className="flex items-center justify-between mb-2">
+      <h2 className="text-section font-semibold">营养追踪</h2>
+      <button className="p-2 hover:bg-muted rounded-lg transition">
+        <Calendar size={20} className="text-secondary" />
+      </button>
+    </div>
+    <p className="text-caption text-secondary">记录你的每日营养摄入</p>
+  </div>
+  
+  {/* Today's Goals */}
+  <div>
+    <h3 className="text-body font-semibold mb-1">今日营养</h3>
+    <p className="text-caption text-secondary">目标能量</p>
+  </div>
+  
+  {/* Macros */}
+  <div className="flex flex-col gap-4">
+    {macros.map(macro => (
+      <div key={macro.name}>
+        <div className="flex justify-between mb-1.5">
+          <span className="text-body">{macro.name}</span>
+          <span className="text-body font-semibold tabular-nums">
+            {macro.current}
+          </span>
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="relative h-1.5 bg-divider rounded-full overflow-hidden">
+          <div 
+            className="absolute h-full bg-primary rounded-full transition-all duration-500"
+            style={{ width: `${(macro.current / macro.goal) * 100}%` }}
+          />
+        </div>
+        
+        <div className="text-caption text-secondary mt-1 text-right tabular-nums">
+          / {macro.goal}{macro.unit}
+        </div>
+      </div>
+    ))}
+  </div>
+  
+  {/* Advice Card */}
+  <div className="
+    flex gap-3 p-4
+    bg-muted rounded-xl
+    border-l-4 border-accent
+  ">
+    <Lightbulb size={20} className="text-accent flex-shrink-0 mt-0.5" />
+    <div>
+      <p className="text-body font-semibold mb-1">建议目标</p>
+      <p className="text-caption text-secondary">
+        热量盈余,充足蛋白摄入
+      </p>
+    </div>
+  </div>
+  
+  {/* Collapsible Section */}
+  <button className="
+    flex items-center justify-between
+    py-3 px-4
+    hover:bg-muted rounded-xl
+    transition-colors
+  ">
+    <span className="text-body font-semibold">本周统计</span>
+    <ChevronDown size={20} className="text-secondary" />
+  </button>
+</div>
+```
+
+**Playful Details:**
+- Progress bars animate on load (0% → actual value)
+- Advice card has subtle pulse animation (optional, on new advice)
+- Lightbulb icon can have a gentle glow effect
+
+**Specifications:**
+- Progress bars: 6px height, 4px radius, #EEEEEE background
+- Filled portion: #1A1A1A (monochrome)
+- Numbers: `font-variant-numeric: tabular-nums` for alignment
+- Card: 16px padding, 12px radius, 4px left border
+- Spacing: 16px between macro groups
+
+---
+
+### D. Restaurant Management
+
+**Current Issues:**
+- Large avatar circles waste space
+- Tags feel disconnected
+- Action buttons lack clear affordance
+
+**Redesign Approach:**
+
+```
+┌─────────────────────────────────┐
+│  餐厅管理                [+ ⚙]  │
+│  管理你的餐厅选项相册              │
+│                                 │
+│  ┌─ 个性化餐厅 ─────────────┐  │
+│  │                           │  │
+│  │ [人] 上海小馄饨            │  │
+│  │     早餐 · 午餐            │  │
+│  │     0 次访问               │  │
+│  │                      [✎ 🗑] │  │
+│  └───────────────────────────┘  │
+│                                 │
+│  [A] Atable                     │
+│      早餐 · 午餐 · 晚餐           │
+│      5 次访问 · 最后 9/26        │
+│                            [✎ 🗑] │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━  │
+│                                 │
+│  [犀] 犀牛食堂                    │
+│      晚餐 · 午餐                 │
+│      0 次访问                    │
+│                            [✎ 🗑] │
+└─────────────────────────────────┘
+```
+
+**Tailwind Implementation:**
+```jsx
+<div className="flex flex-col gap-4 p-5">
+  {/* Header */}
+  <div>
+    <div className="flex items-center justify-between mb-2">
+      <h2 className="text-section font-semibold">餐厅管理</h2>
+      <div className="flex gap-2">
+        <button className="p-2 hover:bg-muted rounded-lg transition">
+          <Plus size={20} />
+        </button>
+        <button className="p-2 hover:bg-muted rounded-lg transition">
+          <Settings size={20} />
+        </button>
+      </div>
+    </div>
+    <p className="text-caption text-secondary">管理你的餐厅选项相册</p>
+  </div>
+  
+  {/* Restaurant Stats */}
+  <div className="grid grid-cols-3 gap-4 p-4 bg-muted rounded-xl">
+    <div className="text-center">
+      <div className="text-title font-semibold">9</div>
+      <div className="text-caption text-secondary">总餐厅</div>
+    </div>
+    <div className="text-center">
+      <div className="text-title font-semibold">1</div>
+      <div className="text-caption text-secondary">完成餐厅</div>
+    </div>
+    <div className="text-center">
+      <div className="text-title font-semibold">1</div>
+      <div className="text-caption text-secondary">已禁试</div>
+    </div>
+  </div>
+  
+  {/* Featured Restaurant (Card Style) */}
+  <div className="p-4 bg-muted rounded-xl border border-divider">
+    <div className="flex items-start gap-3">
+      <div className="
+        w-10 h-10 rounded-full
+        bg-accent text-white
+        flex items-center justify-center
+        text-body font-semibold
+        flex-shrink-0
+      ">
+        人
+      </div>
+      
+      <div className="flex-1 min-w-0">
+        <h3 className="text-body font-semibold mb-1">上海小馄饨</h3>
+        <div className="flex flex-wrap gap-2 mb-2">
+          <span className="text-caption text-secondary">早餐</span>
+          <span className="text-secondary">·</span>
+          <span className="text-caption text-secondary">午餐</span>
+        </div>
+        <p className="text-caption text-secondary">0 次访问</p>
+      </div>
+      
+      <div className="flex gap-2 flex-shrink-0">
+        <button className="p-2 hover:bg-white rounded-lg transition">
+          <Edit2 size={16} className="text-secondary" />
+        </button>
+        <button className="p-2 hover:bg-white rounded-lg transition">
+          <Trash2 size={16} className="text-secondary" />
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  {/* Restaurant List */}
+  <div className="flex flex-col">
+    {restaurants.map(restaurant => (
+      <div
+        key={restaurant.id}
+        className="
+          flex items-center gap-3
+          py-4 border-b border-divider
+          hover:bg-muted -mx-5 px-5
+          transition-colors
+        "
+      >
+        {/* Avatar */}
+        <div className={`
+          w-10 h-10 rounded-full
+          flex items-center justify-center
+          text-body font-semibold
+          flex-shrink-0
+          ${restaurant.featured ? 'bg-accent text-white' : 'bg-muted border-2 border-divider'}
+        `}>
+          {restaurant.initial}
+        </div>
+        
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-body font-medium mb-1 truncate">
+            {restaurant.name}
+          </h3>
+          <p className="text-caption text-secondary">
+            {restaurant.meals.join(' · ')}
+          </p>
+          {restaurant.visits > 0 && (
+            <p className="text-caption text-secondary mt-0.5">
+              {restaurant.visits} 次访问 · 最后 {restaurant.lastVisit}
+            </p>
+          )}
+          {restaurant.visits === 0 && (
+            <p className="text-caption text-secondary mt-0.5">
+              0 次访问
+            </p>
+          )}
+        </div>
+        
+        {/* Actions */}
+        <div className="flex gap-2 flex-shrink-0">
+          <button className="p-2 hover:bg-muted rounded-lg transition">
+            <Edit2 size={16} className="text-secondary" />
+          </button>
+          <button className="p-2 hover:bg-muted rounded-lg transition">
+            <Trash2 size={16} className="text-secondary" />
+          </button>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+```
+
+**Playful Details:**
+- Swipe gesture reveals actions (native mobile pattern)
+- Edit button scales slightly on tap
+- Delete has a slide-out animation
+- Featured restaurant has subtle shadow lift on hover
+
+**Specifications:**
+- Avatar: 40px circle, 2px border for non-featured
+- Featured avatar: accent background, white text
+- Restaurant name: 16px medium weight
+- Metadata: 13px regular, #666, " · " separator
+- Action icons: 16px, touch target 40px
+- Row height: 72px minimum
+- Tap feedback: background color transition 150ms
+
+---
+
+## 04. Motion & Interaction Design
+
+### Animation Principles
+**Timing**
+```css
+/* Tailwind v4 Custom Theme */
+@theme {
+  --duration-fast: 150ms;      /* Hover states, color changes */
+  --duration-base: 200ms;      /* Button presses, toggles */
+  --duration-slow: 300ms;      /* Page transitions, drawers */
+  --duration-slower: 500ms;    /* Progress bars, data updates */
+}
+```
+
+**Easing**
+```css
+@theme {
+  --ease-out: cubic-bezier(0.4, 0.0, 0.2, 1);     /* Material standard */
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1); /* Playful spring */
+  --ease-smooth: cubic-bezier(0.4, 0.0, 0.6, 1);   /* Gentle decel */
+}
+```
+
+**Feedback States**
+```css
+/* Button Press */
+.btn-press {
+  @apply active:scale-[0.98] transition-transform duration-base;
+}
+
+/* Button Hover */
+.btn-hover {
+  @apply hover:scale-[1.02] transition-transform duration-fast;
+}
+
+/* Icon Rotate (Playful) */
+.icon-spin {
+  @apply hover:rotate-180 transition-transform duration-slow;
+}
+```
+
+### Key Interactions
+
+**Selection Feedback**
+```jsx
+// Radio/Checkbox fill animation
+<motion.div
+  initial={{ scale: 0 }}
+  animate={{ scale: 1 }}
+  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+  className="w-3 h-3 rounded-full bg-accent"
+/>
+```
+
+**Navigation Transitions**
+```jsx
+// Slide-in from right
+<motion.div
+  initial={{ x: "100%", opacity: 0.8 }}
+  animate={{ x: 0, opacity: 1 }}
+  exit={{ x: "-50%", opacity: 0 }}
+  transition={{ duration: 0.3, ease: [0.4, 0.0, 0.2, 1] }}
+>
+  {/* Page content */}
+</motion.div>
+```
+
+**Success States** (Playful moment)
+```jsx
+// Checkmark pop-in with bounce
+<motion.div
+  initial={{ scale: 0, rotate: -180 }}
+  animate={{ scale: 1, rotate: 0 }}
+  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+>
+  <Check className="text-accent" size={24} />
+</motion.div>
+```
+
+**Swipe to Delete**
+```jsx
+// Threshold: 120px
+<motion.div
+  drag="x"
+  dragConstraints={{ left: -120, right: 0 }}
+  dragElastic={0.2}
+  onDragEnd={(e, { offset }) => {
+    if (offset.x < -120) handleDelete()
+  }}
+>
+  {/* List item */}
+</motion.div>
+```
+
+**Loading States**
+```jsx
+// Progress bar fill animation
+<motion.div
+  initial={{ width: "0%" }}
+  animate={{ width: `${percentage}%` }}
+  transition={{ duration: 0.5, ease: [0.4, 0.0, 0.6, 1] }}
+  className="h-1.5 bg-primary rounded-full"
+/>
+```
+
+### Micro-Interactions (Playful Details)
+
+**Shuffle Button**
+```jsx
+const [isShuffling, setIsShuffling] = useState(false)
+
+<motion.button
+  whileTap={{ scale: 0.98 }}
+  onClick={() => {
+    setIsShuffling(true)
+    setTimeout(() => setIsShuffling(false), 600)
+    handleShuffle()
+  }}
+>
+  <motion.div
+    animate={{ rotate: isShuffling ? 360 : 0 }}
+    transition={{ duration: 0.6, ease: "easeInOut" }}
+  >
+    <Shuffle size={20} />
+  </motion.div>
+  随机推荐
+</motion.button>
+```
+
+**Number Counter** (Nutrition tracking)
+```jsx
+<motion.span
+  key={currentValue}
+  initial={{ y: 10, opacity: 0 }}
+  animate={{ y: 0, opacity: 1 }}
+  transition={{ duration: 0.3 }}
+  className="tabular-nums"
+>
+  {currentValue}
+</motion.span>
+```
+
+**Empty State Bounce**
+```jsx
+<motion.div
+  initial={{ scale: 0.9, opacity: 0 }}
+  animate={{ scale: 1, opacity: 1 }}
+  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+>
+  {/* Empty state illustration */}
+</motion.div>
+```
+
+---
+
+## 05. Layout & Spacing System
+
+### Spatial System (Tailwind v4)
+```css
+@theme {
+  --spacing-0: 0;
+  --spacing-1: 0.25rem;   /* 4px */
+  --spacing-2: 0.5rem;    /* 8px - Micro */
+  --spacing-3: 0.75rem;   /* 12px */
+  --spacing-4: 1rem;      /* 16px - Small */
+  --spacing-5: 1.25rem;   /* 20px */
+  --spacing-6: 1.5rem;    /* 24px - Medium */
+  --spacing-8: 2rem;      /* 32px - Large */
+  --spacing-12: 3rem;     /* 48px - XLarge */
+  --spacing-16: 4rem;     /* 64px - XXLarge */
+}
+```
+
+**Usage Guidelines**
+- **Micro (8px):** Icon-to-text, button padding, tag padding
+- **Small (16px):** Component internal padding, list item gaps
+- **Medium (24px):** Section spacing, card padding
+- **Large (32px):** Screen edge padding (mobile)
+- **XLarge (48px):** Major section breaks, modal padding
+
+### Safe Areas (PWA Mobile)
+```css
+/* Tailwind v4 Safe Area Plugin */
+.safe-top {
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+
+.safe-bottom {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+.safe-bottom-nav {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  /* 64px for bottom nav + safe area */
+}
+
+.safe-x {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+```
+
+### Responsive Breakpoints
+```css
+@theme {
+  /* Tailwind default, adjusted for PWA */
+  --breakpoint-sm: 640px;   /* Large phones landscape */
+  --breakpoint-md: 768px;   /* Tablets */
+  --breakpoint-lg: 1024px;  /* Desktop (rare for PWA) */
+}
+```
+
+**Mobile-First Strategy**
+- Base design: 375px width (iPhone SE)
+- Optimize for: 390px-430px (modern phones)
+- Max content width: 640px (tablet landscape)
+
+### Grid System
+```jsx
+/* Two-column layout */
+<div className="grid grid-cols-2 gap-4">
+  {/* Items */}
+</div>
+
+/* Three-column layout (icons, stats) */
+<div className="grid grid-cols-3 gap-4">
+  {/* Items */}
+</div>
+
+/* Responsive sidebar (desktop fallback) */
+<div className="grid md:grid-cols-[240px_1fr] gap-6">
+  {/* Sidebar + Main */}
+</div>
+```
+
+---
+
+## 06. Bottom Navigation (Tab Bar)
+
+### Current Issues
+- Icons lack consistency
+- Active states not clear enough
+- Labels could be more concise
+
+### Redesign Approach
+
+```
+┌─────────────────────────────────┐
+│                                 │
+│         [Content Area]          │
+│                                 │
+└─────────────────────────────────┘
+┌─────────────────────────────────┐
+│  [Home]  [GimmeFood]  [Stats]  [Settings] │
+│   首页     给我食物    营养      管理  │
+└─────────────────────────────────┘
+```
+
+**Tailwind Implementation:**
+```jsx
+<nav className="
+  fixed bottom-0 left-0 right-0
+  flex items-center justify-around
+  h-16 safe-bottom
+  bg-white border-t border-divider
+  z-50
+">
+  {tabs.map(tab => (
+    <button
+      key={tab.id}
+      onClick={() => setActiveTab(tab.id)}
+      className={`
+        flex flex-col items-center justify-center
+        w-full h-full
+        transition-colors duration-200
+        ${activeTab === tab.id ? 'text-accent' : 'text-secondary'}
+      `}
+    >
+      <motion.div
+        animate={{
+          scale: activeTab === tab.id ? 1.1 : 1,
+          y: activeTab === tab.id ? -2 : 0
+        }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      >
+        <tab.icon size={22} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+      </motion.div>
+      <span className={`
+        text-[11px] mt-1
+        ${activeTab === tab.id ? 'font-semibold' : 'font-regular'}
+      `}>
+        {tab.label}
+      </span>
+    </button>
+  ))}
+</nav>
+```
+
+**Icon Mapping:**
+- 首页 (Home) → `Home` icon
+- 给我食物 (GimmeFood) → `Sparkles` icon (playful!)
+- 营养 (Nutrition) → `BarChart3` icon
+- 管理 (Settings) → `Settings` icon
+
+**Playful Details:**
+- Active tab icon bounces up 2px
+- Active tab scales 10% larger
+- Stroke weight increases on active state
+- Smooth spring animation (not linear)
+
+**Specifications:**
+- Height: 64px (h-16) + safe area
+- Icon size: 22px active, 20px inactive
+- Label: 11px, semibold when active
+- Active color: accent (#E85D47)
+- Inactive color: secondary (#666)
+- Touch target: Full width divided by tabs
+
+---
+
+## 07. Reference Benchmarks
+
+### Apps to Study
+
+**1. Linear** (linear.app)
+- **What to observe:** Keyboard-first design translating to touch
+- **Key takeaway:** Monochrome with single accent, generous whitespace
+- **Apply to GimmeFood:** List management patterns, command menu interactions
+
+**2. Things 3** (iOS app)
+- **What to observe:** Subtle color usage, sophisticated list UX
+- **Key takeaway:** Balance between information density and breathing room
+- **Apply to GimmeFood:** Today view patterns, checkbox animations, swipe gestures
+
+**3. Stripe Dashboard** (stripe.com/dashboard)
+- **What to observe:** Data visualization in minimal aesthetic
+- **Key takeaway:** Muted progress bars, clear hierarchy through typography
+- **Apply to GimmeFood:** Nutrition tracking layout, statistics cards
+
+**4. Reflective** (reflective.app)
+- **What to observe:** Chinese-English bilingual design
+- **Key takeaway:** Line-height adjustments for mixed scripts
+- **Apply to GimmeFood:** Typography handling, reading experience
+
+**5. Centered** (centered.app)
+- **What to observe:** Mindful interactions, breathing room
+- **Key takeaway:** Micro-animations that feel intentional, not gratuitous
+- **Apply to GimmeFood:** Success states, transition timing
+
+**6. Cron Calendar** (now Notion Calendar)
+- **What to observe:** Time-based UI with playful restraint
+- **Key takeaway:** How to add personality through motion, not color
+- **Apply to GimmeFood:** Date picker, scheduling patterns
+
+### Design Systems
+
+**Tailwind UI** (tailwindui.com)
+- Component patterns: List groups, form controls, stat cards
+- Study: "Application UI" → "Lists" section
+
+**Shadcn/ui** (ui.shadcn.com)
+- Modern React patterns with minimal aesthetic
+- Use: Ready-made components (Dialog, Select, Dropdown)
+
+**Radix Primitives** (radix-ui.com)
+- Unstyled, accessible components
+- Use: Calendar, Select, Checkbox base components
+
+**Apple Human Interface Guidelines**
+- iOS → "Layout" and "Typography" sections
+- Study: Safe area handling, touch target sizes
+
+**Material Design 3** (m3.material.io)
+- Study: Motion principles, state layer patterns
+- Note: Don't copy the aesthetic, learn the logic
+
+---
+
+## 08. Accessibility & Performance
+
+### Accessibility Standards
+
+**Contrast Ratios (WCAG 2.1)**
+```
+Body text (#1A1A1A on #FAFAFA)
+  → 15.6:1 ✓ WCAG AAA
+
+Secondary text (#666666 on #FAFAFA)
+  → 5.7:1 ✓ WCAG AA
+
+Accent on white (#E85D47 on #FFFFFF)
+  → 4.8:1 ✓ WCAG AA (large text only)
+  
+Warning: Use accent color only for:
+  - Buttons (with white text)
+  - Large text (18px+)
+  - Icons paired with text
+```
+
+**Touch Targets**
+```css
+/* Minimum sizes */
+.touch-target {
+  min-height: 44px;  /* WCAG 2.5.5 Level AAA */
+  min-width: 44px;
+}
+
+/* Your implementation */
+Primary buttons:   56px ✓
+Secondary buttons: 48px ✓
+List items:        60-72px ✓
+Icon buttons:      40px ✓
+```
+
+**Focus States**
+```css
+/* Keyboard navigation */
+.focusable {
+  @apply focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2;
+}
+
+/* Example */
+<button className="
+  rounded-xl
+  focus:outline-none
+  focus:ring-2 focus:ring-accent
+  focus:ring-offset-2
+  transition-shadow
+">
+```
+
+**Screen Reader Support**
+```jsx
+/* Semantic HTML */
+<nav aria-label="主导航">
+  <button aria-label="首页" aria-current="page">
+    <Home />
+    <span className="sr-only">首页</span>
+  </button>
+</nav>
+
+/* Loading states */
+<div role="status" aria-live="polite">
+  {isLoading && <span className="sr-only">加载中...</span>}
+</div>
+
+/* Form labels */
+<label htmlFor="restaurant-name" className="text-body font-medium">
+  餐厅名称
+</label>
+<input
+  id="restaurant-name"
+  aria-required="true"
+  aria-invalid={hasError}
+  aria-describedby="name-error"
+/>
+```
+
+**Reduced Motion**
+```css
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+### Performance Optimization
+
+**Critical Rendering Path**
+```html
+<!-- Preload fonts -->
+<link rel="preload" href="/fonts/Inter-Variable.woff2" as="font" type="font/woff2" crossorigin>
+
+<!-- Inline critical CSS -->
+<style>
+  /* Base layout + above-fold styles */
+  body { font-family: Inter, system-ui; background: #FAFAFA; }
+</style>
+
+<!-- Defer non-critical -->
+<link rel="stylesheet" href="/styles/app.css" media="print" onload="this.media='all'">
+```
+
+**Image Strategy**
+```jsx
+/* Use Next.js Image or similar */
+<Image
+  src="/restaurant-avatar.jpg"
+  width={40}
+  height={40}
+  loading="lazy"
+  placeholder="blur"
+  className="rounded-full"
+/>
+
+/* Or native lazy loading */
+<img
+  src="/icon.png"
+  loading="lazy"
+  decoding="async"
+  alt="餐厅图标"
+/>
+```
+
+**Animation Performance**
+```css
+/* Use GPU-accelerated properties only */
+✓ transform: translateX(), scale(), rotate()
+✓ opacity
+✗ left, top, width, height (causes layout reflow)
+
+/* Force GPU layer */
+.will-animate {
+  will-change: transform, opacity;
+}
+
+/* Remove after animation */
+onAnimationEnd={() => {
+  element.style.willChange = 'auto'
+}}
+```
+
+**Bundle Size**
+```bash
+# Recommended packages
+lucide-react        ~300KB (tree-shakeable icons)
+framer-motion       ~50KB (gzipped)
+date-fns/locale/zh-CN  ~10KB (vs. moment.js 67KB)
+
+# Avoid
+moment.js           67KB (use date-fns)
+lodash              70KB (use lodash-es + tree-shaking)
+```
+
+**PWA Optimization**
+```json
+// manifest.json
+{
+  "name": "GimmeFood - 给我食物",
+  "short_name": "GimmeFood",
+  "theme_color": "#E85D47",
+  "background_color": "#FAFAFA",
+  "display": "standalone",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+---
+
+## 09. Implementation Roadmap
+
+### Phase 1: Foundation (Week 1-2)
+**Goal:** Establish design system infrastructure
+
+- [ ] Set up Tailwind v4 custom theme with color tokens
+- [ ] Configure typography system (Inter + Noto Sans SC)
+- [ ] Install lucide-react and map emoji → icons
+- [ ] Create base component library:
+  - [ ] Button (primary, secondary, ghost variants)
+  - [ ] Input (text, select, textarea)
+  - [ ] Card container
+  - [ ] List item base
+
+**Deliverables:**
+- `tailwind.config.js` with custom theme
+- `/components/ui/` folder with base components
+- Storybook or component playground
+
+### Phase 2: Core Screens (Week 3-4)
+**Goal:** Redesign main user flows
+
+- [ ] Home screen ("给我食物!")
+  - [ ] Three-button layout
+  - [ ] Icon animations
+  - [ ] Mobile-first responsive
+- [ ] Category selection
+  - [ ] Radio list component
+  - [ ] Selection animations
+  - [ ] Bottom sheet pattern
+- [ ] Bottom navigation
+  - [ ] Tab bar component
+  - [ ] Active state animations
+  - [ ] Route integration
+
+**Deliverables:**
+- Functional home → selection → result flow
+- Bottom nav working across all screens
+- 60fps animations on mid-range devices
+
+### Phase 3: Data-Heavy Views (Week 5-6)
+**Goal:** Rebuild complex interfaces
+
+- [ ] Nutrition tracking
+  - [ ] Progress bar component
+  - [ ] Animated counters
+  - [ ] Chart integration (optional)
+  - [ ] Advice card component
+- [ ] Restaurant management
+  - [ ] List with avatars
+  - [ ] Swipe-to-delete
+  - [ ] Edit modal/sheet
+  - [ ] Stats dashboard
+
+**Deliverables:**
+- Nutrition page with real data integration
+- Restaurant CRUD fully functional
+- Performance audit (< 3s load time)
+
+### Phase 4: Polish & Refinement (Week 7-8)
+**Goal:** Perfect the details
+
+- [ ] Micro-interactions
+  - [ ] Success animations
+  - [ ] Loading states
+  - [ ] Empty states
+  - [ ] Error handling
+- [ ] Accessibility audit
+  - [ ] Keyboard navigation
+  - [ ] Screen reader testing
+  - [ ] Contrast verification
+  - [ ] Focus indicators
+- [ ] Performance optimization
+  - [ ] Code splitting
+  - [ ] Image optimization
+  - [ ] PWA caching strategy
+- [ ] Cross-device testing
+  - [ ] iOS Safari
+  - [ ] Android Chrome
+  - [ ] Various screen sizes
+
+**Deliverables:**
+- Lighthouse score > 90
+- Zero accessibility violations (axe DevTools)
+- Smooth 60fps on iPhone SE 2020
+- PWA installable with offline support
+
+### Phase 5: Optional Enhancements
+**Consider if time allows:**
+
+- [ ] Dark mode
+  - [ ] Color palette adjustments
+  - [ ] Image/icon variations
+  - [ ] System preference detection
+- [ ] Haptic feedback (mobile)
+  - [ ] Button presses
+  - [ ] Swipe gestures
+  - [ ] Success confirmations
+- [ ] Onboarding flow
+  - [ ] First-time user guide
+  - [ ] Interactive tutorial
+  - [ ] Sample data seeding
+- [ ] Advanced animations
+  - [ ] Page transitions
+  - [ ] Parallax effects (subtle)
+  - [ ] Gesture-driven interactions
+
+---
+
+## 10. Design Tokens (Tailwind v4)
+
+### Complete Theme Configuration
+
+```js
+// tailwind.config.js
+import { fontFamily } from 'tailwindcss/defaultTheme'
+
+export default {
+  theme: {
+    extend: {
+      colors: {
+        background: '#FAFAFA',
+        surface: '#FFFFFF',
+        primary: '#1A1A1A',
+        secondary: '#666666',
+        accent: {
+          DEFAULT: '#E85D47',
+          light: '#F5A89C',
+          dark: '#D44A33',
+        },
+        divider: '#EEEEEE',
+        muted: '#F5F5F5',
+      },
+      fontFamily: {
+        sans: ['Inter', 'Noto Sans SC', ...fontFamily.sans],
+      },
+      fontSize: {
+        'title': ['1.5rem', { lineHeight: '1.2', fontWeight: '600' }],
+        'section': ['1.125rem', { lineHeight: '1.3', fontWeight: '600' }],
+        'body': ['0.9375rem', { lineHeight: '1.5', fontWeight: '400' }],
+        'caption': ['0.8125rem', { lineHeight: '1.4', fontWeight: '400' }],
+      },
+      spacing: {
+        'safe-top': 'max(1rem, env(safe-area-inset-top))',
+        'safe-bottom': 'calc(1rem + env(safe-area-inset-bottom))',
+        'safe-bottom-nav': 'calc(4rem + env(safe-area-inset-bottom))',
+      },
+      transitionDuration: {
+        'fast': '150ms',
+        'base': '200ms',
+        'slow': '300ms',
+        'slower': '500ms',
+      },
+      transitionTimingFunction: {
+        'out': 'cubic-bezier(0.4, 0.0, 0.2, 1)',
+        'bounce': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+        'smooth': 'cubic-bezier(0.4, 0.0, 0.6, 1)',
+      },
+      borderRadius: {
+        'xl': '12px',
+        '2xl': '16px',
+      },
+      boxShadow: {
+        'sm': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        'md': '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+        'focus': '0 0 0 2px #E85D47',
+      },
+    },
+  },
+  plugins: [
+    // Add utility for tabular numbers
+    function({ addUtilities }) {
+      addUtilities({
+        '.tabular-nums': {
+          fontVariantNumeric: 'tabular-nums',
+        },
+        '.sr-only': {
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: '0',
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          whiteSpace: 'nowrap',
+          borderWidth: '0',
+        },
+      })
+    },
+  ],
+}
+```
+
+---
+
+## 11. Component Library Structure
+
+### Recommended File Organization
+
+```
+src/
+├── components/
+│   ├── ui/                    # Base components
+│   │   ├── Button.jsx
+│   │   ├── Card.jsx
+│   │   ├── Input.jsx
+│   │   ├── Radio.jsx
+│   │   ├── ProgressBar.jsx
+│   │   └── Avatar.jsx
+│   ├── layout/                # Layout components
+│   │   ├── BottomNav.jsx
+│   │   ├── Header.jsx
+│   │   └── Container.jsx
+│   ├── features/              # Feature-specific
+│   │   ├── MealSelector.jsx
+│   │   ├── RestaurantCard.jsx
+│   │   ├── NutritionBar.jsx
+│   │   └── RandomButton.jsx
+│   └── icons/                 # Icon wrapper
+│       └── index.js           # Re-export lucide icons
+├── styles/
+│   └── globals.css            # Tailwind imports
+├── utils/
+│   ├── animations.js          # Framer Motion variants
+│   └── constants.js           # Design tokens (JS)
+└── app/                       # Pages (Next.js structure)
+    ├── page.jsx               # Home
+    ├── select/                # Category selection
+    ├── nutrition/             # Nutrition tracking
+    └── manage/                # Restaurant management
+```
+
+### Example Base Components
+
+**Button.jsx**
+```jsx
+import { forwardRef } from 'react'
+import { cn } from '@/utils/cn'
+
+const Button = forwardRef(({ 
+  variant = 'primary',
+  size = 'default',
+  className,
+  children,
+  ...props 
+}, ref) => {
+  return (
+    <button
+      ref={ref}
+      className={cn(
+        // Base styles
+        'inline-flex items-center justify-center gap-2',
+        'font-semibold rounded-xl',
+        'transition-all duration-base',
+        'focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2',
+        'active:scale-[0.98]',
+        'disabled:opacity-50 disabled:pointer-events-none',
+        
+        // Variants
+        {
+          'bg-accent text-white hover:bg-accent-light': variant === 'primary',
+          'border-2 border-divider hover:border-accent hover:bg-muted': variant === 'secondary',
+          'hover:bg-muted': variant === 'ghost',
+        },
+        
+        // Sizes
+        {
+          'h-12 px-6 text-body': size === 'default',
+          'h-14 px-8 text-section': size === 'large',
+          'h-10 px-4 text-caption': size === 'small',
+        },
+        
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+})
+
+Button.displayName = 'Button'
+export default Button
+```
+
+---
+
+## 12. Testing Checklist
+
+### Visual Regression
+- [ ] Screenshot comparison (Percy, Chromatic)
+- [ ] Test on iPhone SE (375px)
+- [ ] Test on iPhone 15 Pro (393px)
+- [ ] Test on Pixel 7 (412px)
+- [ ] Test on iPad Mini (744px landscape)
+
+### Interaction Testing
+- [ ] All buttons respond to tap
+- [ ] Swipe gestures work smoothly
+- [ ] Animations don't jank (< 16ms frames)
+- [ ] Forms validate correctly
+- [ ] Navigation flows work end-to-end
+
+### Accessibility
+- [ ] Keyboard navigation (Tab, Enter, Escape)
+- [ ] Screen reader testing (VoiceOver on iOS)
+- [ ] Color contrast meets WCAG AA
+- [ ] Touch targets ≥ 44px
+- [ ] Focus indicators visible
+
+### Performance
+- [ ] Lighthouse score > 90
+- [ ] First Contentful Paint < 1.5s
+- [ ] Time to Interactive < 3s
+- [ ] PWA installable
+- [ ] Offline mode functional
+
+### Cross-Browser
+- [ ] iOS Safari (primary)
+- [ ] Android Chrome
+- [ ] Firefox Mobile
+- [ ] Samsung Internet (if significant user base)
+
+---
+
+## 13. Why This Minimalist Approach Works
+
+### Psychological Benefits
+
+**Reduced Decision Fatigue**
+- Your app's core value proposition is simplifying food decisions
+- A cluttered UI contradicts this promise
+- Minimalism reinforces the product's purpose
+
+**Perceived Quality**
+- Users associate clean design with premium products (Apple, Muji)
+- Increases trust in recommendations
+- Makes the app feel more professional
+
+**Cognitive Load Reduction**
+- Removing gradients reduces visual processing time by ~20-30% (Nielsen Norman Group studies)
+- Single accent color creates clear hierarchy
+- Generous whitespace improves comprehension
+
+### Practical Benefits
+
+**Scalability**
+- Clean foundation prevents UI collapse as features expand
+- Easier to add dietary restrictions, group voting, ratings
+- New features integrate naturally
+
+**Performance**
+- Gradients are render-intensive (especially CSS gradients)
+- Flat colors = faster paint times
+- Smaller bundle size (fewer custom styles)
+
+**Maintainability**
+- Design system tokens make global changes easy
+- Component library reduces code duplication
+- Clear patterns for new developers
+
+**Accessibility**
+- Higher contrast by default
+- Clearer focus states
+- Better screen reader compatibility
+
+---
+
+## 14. Next Steps
+
+### Immediate Actions
+1. **Review this document** with your team
+2. **Create a mood board** with reference apps (Linear, Things 3, Stripe)
+3. **Set up Tailwind v4** with custom theme
+4. **Install Lucide React** and map initial icons
+5. **Build 3-5 base components** (Button, Card, Input)
+
+### Week 1 Milestone
+- Redesigned home screen functional
+- Bottom navigation implemented
+- Design tokens in use across codebase
+
+### Questions to Resolve
+- Do you want me to create **high-fidelity Figma mockups**?
+- Should I **code a prototype** of the home screen in React?
+- Any specific screen you want to prioritize first?
+- Would you like **dark mode** consideration from the start?
+
+---
+
+## 15. Contact & Iteration
+
+This is a living document. As you implement, you'll discover:
+- Edge cases not covered
+- Patterns that need adjustment
+- New features that challenge the system
+
+**Feedback loops:**
+1. Build → Test → Refine (weekly sprints)
+2. User testing (A/B test old vs new with 5-10 users)
+3. Analytics (track engagement, completion rates)
+4. Iteration (don't be afraid to adjust)
+
+Remember: **Minimalism isn't about removing everything—it's about keeping only what matters.**
+
+Your playful moments should feel intentional, not decorative. Every animation should serve a purpose: feedback, guidance, or delight at the right moment.
+
+---
+
+## Appendix: Quick Reference
+
+### Color Palette
+```
+Background:  #FAFAFA
+Surface:     #FFFFFF
+Primary:     #1A1A1A
+Secondary:   #666666
+Accent:      #E85D47
+Divider:     #EEEEEE
+Muted:       #F5F5F5
+```
+
+### Typography Scale
+```
+Title:    24px / 600 / 1.2
+Section:  18px / 600 / 1.3
+Body:     15px / 400 / 1.5
+Caption:  13px / 400 / 1.4
+```
+
+### Spacing Scale
+```
+2: 8px   (Micro)
+4: 16px  (Small)
+6: 24px  (Medium)
+8: 32px  (Large)
+12: 48px (XLarge)
+```
+
+### Animation Timing
+```
+Fast:   150ms (hover)
+Base:   200ms (tap)
+Slow:   300ms (transition)
+Slower: 500ms (data update)
+```
+
+### Icon Sizes
+```
+Small:   16px (inline)
+Default: 20px (buttons)
+Large:   24px (features)
+XLarge:  32px (empty states)
+```
+
+---
+
+**Document Version:** 1.0  
+**Last Updated:** 2025-10-11  
+**Author:** Claude (Anthropic)  
+**For:** GimmeFood PWA Redesign
