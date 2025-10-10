@@ -156,11 +156,17 @@ export function NutritionInput() {
             </div>
           )}
 
-          {/* 餐厅信息 */}
+          {/* 餐厅/做饭信息 */}
           {selectedRestaurant && (
-            <div className="bg-purple-50 rounded-lg p-3 mb-4 border border-purple-200">
+            <div className={`rounded-lg p-3 mb-4 border ${
+              selectedRestaurant.isHomeCooking
+                ? 'bg-amber-50 border-amber-200'
+                : 'bg-purple-50 border-purple-200'
+            }`}>
               <div className="flex items-center space-x-2">
-                <span className="text-lg">🍽️</span>
+                <span className="text-lg">
+                  {selectedRestaurant.isHomeCooking ? '👨‍🍳' : '🍽️'}
+                </span>
                 <div className="flex-1">
                   <p className="font-medium text-gray-800">
                     {selectedRestaurant.name}
@@ -187,7 +193,11 @@ export function NutritionInput() {
           <textarea
             value={foodInput}
             onChange={(e) => setFoodInput(e.target.value)}
-            placeholder="例如：牛肉拉面、加蛋、小菜"
+            placeholder={
+              selectedRestaurant?.isHomeCooking
+                ? "例如：番茄炒蛋、米饭、青菜汤"
+                : "例如：牛肉拉面、加蛋、小菜"
+            }
             rows="4"
             className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none resize-none text-gray-800 placeholder-gray-400"
             disabled={loading}

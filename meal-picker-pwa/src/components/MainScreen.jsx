@@ -4,22 +4,46 @@ import React, { useState } from 'react';
 import { useApp } from '../hooks/useApp.js';
 import { useSelection } from '../hooks/useSelection.js';
 import { MEAL_TYPE_NAMES, MEAL_TYPES, TIER_NAMES } from '../utils/storage.js';
-import { NutritionGoalCard } from './NutritionGoalCard.jsx';
 
 export function MainScreen() {
   const { state, dispatch, ActionTypes } = useApp();
   const { selectMealType } = useSelection();
   const [showMealTypes, setShowMealTypes] = useState(false);
+  const [cookMyselfMode, setCookMyselfMode] = useState(false);
 
   // 开始选择流程
   const handleGimmeFoodClick = () => {
+    setCookMyselfMode(false);
+    setShowMealTypes(true);
+  };
+
+  // 开始"自己做饭"流程
+  const handleCookMyselfClick = () => {
+    setCookMyselfMode(true);
     setShowMealTypes(true);
   };
 
   // 选择餐点类型并开始推荐流程
   const handleMealTypeSelect = (mealType) => {
     setShowMealTypes(false);
-    selectMealType(mealType);
+
+    if (cookMyselfMode) {
+      // Cook for myself flow: skip restaurant selection, go directly to nutrition input
+      const homeCookingRestaurant = {
+        id: 'home_cooking',
+        name: '自己做饭',
+        tier: null,
+        isHomeCooking: true
+      };
+
+      dispatch({ type: ActionTypes.SET_SELECTED_RESTAURANT, payload: homeCookingRestaurant });
+      dispatch({ type: ActionTypes.SET_SELECTED_MEAL_TYPE, payload: mealType });
+      dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'nutrition_input' });
+      setCookMyselfMode(false);
+    } else {
+      // Regular magic button flow
+      selectMealType(mealType);
+    }
   };
 
   // 获取当前时间对应的推荐餐点类型
@@ -46,10 +70,19 @@ export function MainScreen() {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
         {/* 头部 */}
-        <div className="bg-gradient-to-br from-blue-600 to-purple-700 text-white px-6 pt-12 pb-8">
+        <div className={`text-white px-6 pt-12 pb-8 ${
+          cookMyselfMode
+            ? 'bg-gradient-to-br from-amber-600 to-orange-700'
+            : 'bg-gradient-to-br from-blue-600 to-purple-700'
+        }`}>
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-2">选择餐点类型</h1>
-            <p className="text-blue-100">现在想吃什么类型的食物？</p>
+            <div className="text-4xl mb-2">{cookMyselfMode ? '👨‍🍳' : '🎲'}</div>
+            <h1 className="text-2xl font-bold mb-2">
+              {cookMyselfMode ? '自己做饭' : '选择餐点类型'}
+            </h1>
+            <p className={cookMyselfMode ? 'text-amber-100' : 'text-blue-100'}>
+              {cookMyselfMode ? '你做了什么类型的菜？' : '现在想吃什么类型的食物？'}
+            </p>
           </div>
         </div>
 
@@ -153,8 +186,22 @@ export function MainScreen() {
           </button>
         </div>
 
-        {/* 营养目标卡片 */}
-        <NutritionGoalCard />
+        {/* Cook for Myself Button */}
+        <div className="bg-white rounded-2xl shadow-sm p-4">
+          <button
+            onClick={handleCookMyselfClick}
+            data-cook-myself-btn
+            className="w-full py-4 px-6 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-md"
+          >
+            <div className="flex items-center justify-center space-x-2">
+              <span className="text-2xl">👨‍🍳</span>
+              <span>自己做饭</span>
+            </div>
+          </button>
+          <p className="text-xs text-gray-500 text-center mt-2">
+            记录家常菜的营养价值
+          </p>
+        </div>
 
         {/* 手动选择按钮 */}
         {state.restaurants.length > 0 ? (

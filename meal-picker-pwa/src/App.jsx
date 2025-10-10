@@ -15,6 +15,7 @@ import { NutritionPrompt } from './components/NutritionPrompt.jsx';
 import { NutritionInput } from './components/NutritionInput.jsx';
 import { NutritionResult } from './components/NutritionResult.jsx';
 import { NutritionGoalSetup } from './components/NutritionGoalSetup.jsx';
+import { NutritionDashboard } from './components/NutritionDashboard.jsx';
 import { ManualSelectionScreen } from './components/ManualSelectionScreen.jsx';
 import { useRestaurants } from './hooks/useRestaurants.js';
 import { ActionTypes } from './constants/index.js';
@@ -77,6 +78,9 @@ function AppRouter() {
 
     case 'nutrition_goal_setup':
       return <NutritionGoalSetup />;
+
+    case 'nutrition_dashboard':
+      return <NutritionDashboard />;
 
     case 'manual_selection':
       return <ManualSelectionScreen />;

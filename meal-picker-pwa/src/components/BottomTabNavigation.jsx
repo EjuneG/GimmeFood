@@ -25,6 +25,13 @@ export function BottomTabNavigation() {
       active: ['question', 'mealType', 'result', 'reselection'].includes(currentStep)
     },
     {
+      id: 'nutrition_dashboard',
+      label: '营养',
+      icon: '📊',
+      activeIcon: '📊',
+      active: ['nutrition_dashboard', 'nutrition_goal_setup', 'nutrition_prompt', 'nutrition_input', 'nutrition_result'].includes(currentStep)
+    },
+    {
       id: 'management',
       label: '管理',
       icon: '⚙️',
