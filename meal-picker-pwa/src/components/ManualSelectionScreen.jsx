@@ -1,9 +1,13 @@
-// 手动选择餐厅组件
-// 允许用户不通过摇骰子，直接选择餐厅并记录营养
+// 手动选择餐厅组件 - Minimalist redesign
+// Clean restaurant selection without the magic button
 
 import React, { useState } from 'react';
+import { ChevronRight, ArrowLeft, Filter, Sunrise, Sun, Moon, Sparkles as SparklesIcon } from 'lucide-react';
 import { useApp } from '../hooks/useApp.js';
 import { MEAL_TYPE_NAMES, MEAL_TYPES, TIER_NAMES } from '../utils/storage.js';
+import { Button } from './ui/Button.jsx';
+import { Avatar } from './ui/Avatar.jsx';
+import { Radio } from './ui/Radio.jsx';
 
 export function ManualSelectionScreen() {
   const { state, dispatch, ActionTypes } = useApp();
@@ -39,21 +43,25 @@ export function ManualSelectionScreen() {
     return mealTypeMatch && tierMatch;
   });
 
-  // 等级图标
-  const tierEmojis = {
-    'hàng': '🌟',
-    'dǐngjí': '⭐',
-    'rénshàngrén': '✨',
-    'NPC': '💫',
-    'lā wán le': '🌙'
+  // 餐点类型图标映射
+  const getMealIcon = (mealType) => {
+    const icons = {
+      breakfast: Sunrise,
+      lunch: Sun,
+      dinner: Moon,
+      snack: SparklesIcon
+    };
+    return icons[mealType] || Sun;
   };
 
-  // 餐点类型图标
-  const mealTypeEmojis = {
-    breakfast: '🌅',
-    lunch: '🍜',
-    dinner: '🍽️',
-    snack: '🍿'
+  // 获取餐厅首字母
+  const getRestaurantInitial = (name) => {
+    return name.charAt(0).toUpperCase();
+  };
+
+  // 判断是否为特色餐厅
+  const isFeatured = (tier) => {
+    return tier === 'hàng' || tier === 'dǐngjí';
   };
 
   // 如果还没选择餐点类型
@@ -61,149 +69,153 @@ export function ManualSelectionScreen() {
     const recommendedType = getRecommendedMealType();
 
     return (
-      <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="min-h-screen bg-background pb-20">
         {/* 头部 */}
-        <div className="bg-gradient-to-br from-green-600 to-teal-700 text-white px-6 pt-12 pb-8">
+        <div className="bg-surface border-b border-divider px-6 pt-12 pb-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-2">手动选择</h1>
-            <p className="text-green-100">选择餐点类型</p>
+            <h1 className="text-title font-semibold mb-2">手动选择</h1>
+            <p className="text-caption text-secondary">选择餐点类型</p>
           </div>
         </div>
 
-        {/* 餐点类型卡片 */}
-        <div className="px-4 -mt-4">
-          <div className="space-y-3">
-            {Object.entries(MEAL_TYPES).map(([, value]) => {
-              const isRecommended = value === recommendedType;
+        {/* 餐点类型列表 */}
+        <div className="px-4 pt-4 space-y-0">
+          {Object.entries(MEAL_TYPES).map(([, value]) => {
+            const isRecommended = value === recommendedType;
+            const Icon = getMealIcon(value);
 
-              return (
-                <div
-                  key={value}
-                  className={`bg-white rounded-2xl shadow-sm border transition-all duration-200 ${
-                    isRecommended ? 'border-green-200 shadow-lg' : 'border-gray-100 hover:shadow-md'
-                  }`}
-                >
-                  <button
-                    onClick={() => setSelectedMealType(value)}
-                    className="w-full p-4 text-left"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${
-                          isRecommended
-                            ? 'bg-gradient-to-br from-green-500 to-teal-600 text-white'
-                            : 'bg-gray-100'
-                        }`}>
-                          {mealTypeEmojis[value]}
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{MEAL_TYPE_NAMES[value]}</h3>
-                          {isRecommended && (
-                            <p className="text-sm text-green-600">基于当前时间推荐</p>
-                          )}
-                        </div>
-                      </div>
-                      {isRecommended && (
-                        <div className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium">
-                          推荐
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+            return (
+              <button
+                key={value}
+                onClick={() => setSelectedMealType(value)}
+                className={`
+                  flex items-center gap-4 w-full
+                  h-16 px-5 py-3
+                  border-b border-divider
+                  hover:bg-muted
+                  transition-colors duration-fast
+                  ${isRecommended ? 'bg-muted' : ''}
+                `}
+              >
+                {/* Radio */}
+                <Radio checked={false} />
 
-          {/* 取消按钮 */}
-          <button
+                {/* Icon + Text */}
+                <Icon size={20} className="text-secondary flex-shrink-0" />
+                <span className="flex-1 text-left font-medium text-body">{MEAL_TYPE_NAMES[value]}</span>
+
+                {/* Recommended Badge */}
+                {isRecommended && (
+                  <div className="text-caption text-accent bg-accent/10 px-2 py-1 rounded-full font-medium">
+                    推荐
+                  </div>
+                )}
+
+                {/* Chevron */}
+                <ChevronRight size={16} className="text-secondary" />
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 取消按钮 */}
+        <div className="px-4 mt-6">
+          <Button
+            variant="secondary"
             onClick={handleCancel}
-            className="w-full mt-6 py-4 bg-gray-100 text-gray-700 rounded-2xl font-medium hover:bg-gray-200 transition-colors"
+            className="w-full"
           >
             取消
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   // 已选择餐点类型，显示餐厅列表
+  const MealIcon = getMealIcon(selectedMealType);
+
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-background pb-20">
       {/* 头部 */}
-      <div className="bg-gradient-to-br from-green-600 to-teal-700 text-white px-6 pt-12 pb-8">
+      <div className="bg-surface border-b border-divider px-6 pt-12 pb-8">
         <div className="text-center">
-          <div className="text-3xl mb-2">{mealTypeEmojis[selectedMealType]}</div>
-          <h1 className="text-2xl font-bold mb-2">选择 {MEAL_TYPE_NAMES[selectedMealType]}</h1>
-          <p className="text-green-100">选择一家餐厅记录营养</p>
+          <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-accent/10 flex items-center justify-center">
+            <MealIcon size={24} className="text-accent" />
+          </div>
+          <h1 className="text-title font-semibold mb-2">
+            选择 {MEAL_TYPE_NAMES[selectedMealType]}
+          </h1>
+          <p className="text-caption text-secondary">
+            选择一家餐厅记录营养
+          </p>
         </div>
       </div>
 
       {/* 筛选栏 */}
-      <div className="px-4 -mt-4 mb-4">
-        <div className="bg-white rounded-2xl shadow-sm p-3">
-          <div className="flex items-center space-x-2 overflow-x-auto">
+      <div className="px-4 pt-4 mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Filter size={16} className="text-secondary" />
+          <span className="text-caption font-medium">等级筛选</span>
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto pb-2">
+          <button
+            onClick={() => setFilterTier('all')}
+            className={`px-3 py-1.5 rounded-lg text-caption font-medium whitespace-nowrap transition-all
+              ${filterTier === 'all'
+                ? 'bg-accent text-white'
+                : 'bg-muted text-secondary hover:bg-divider'
+              }
+            `}
+          >
+            全部
+          </button>
+          {Object.entries(TIER_NAMES).map(([key, value]) => (
             <button
-              onClick={() => setFilterTier('all')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                filterTier === 'all'
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              key={key}
+              onClick={() => setFilterTier(key)}
+              className={`px-3 py-1.5 rounded-lg text-caption font-medium whitespace-nowrap transition-all
+                ${filterTier === key
+                  ? 'bg-accent text-white'
+                  : 'bg-muted text-secondary hover:bg-divider'
+                }
+              `}
             >
-              全部
+              {value}
             </button>
-            {Object.entries(TIER_NAMES).map(([key, value]) => (
-              <button
-                key={key}
-                onClick={() => setFilterTier(key)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                  filterTier === key
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {tierEmojis[key]} {value}
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
 
       {/* 餐厅列表 */}
-      <div className="px-4 space-y-3">
+      <div className="px-4 space-y-0">
         {filteredRestaurants.length > 0 ? (
           filteredRestaurants.map(restaurant => (
-            <div
+            <button
               key={restaurant.id}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all"
+              onClick={() => handleRestaurantSelect(restaurant)}
+              className="flex items-center gap-3 w-full px-4 py-4 border-b border-divider hover:bg-muted transition-colors"
             >
-              <button
-                onClick={() => handleRestaurantSelect(restaurant)}
-                className="w-full p-4 text-left"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-teal-100 rounded-xl flex items-center justify-center text-xl">
-                      {tierEmojis[restaurant.tier]}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{restaurant.name}</h3>
-                      <p className="text-xs text-gray-500">{TIER_NAMES[restaurant.tier]}</p>
-                    </div>
-                  </div>
-                  <div className="text-gray-400">→</div>
-                </div>
-              </button>
-            </div>
+              <Avatar
+                initial={getRestaurantInitial(restaurant.name)}
+                featured={isFeatured(restaurant.tier)}
+              />
+              <div className="flex-1 text-left">
+                <h3 className="font-medium text-body">{restaurant.name}</h3>
+                <p className="text-caption text-secondary">{TIER_NAMES[restaurant.tier]}</p>
+              </div>
+              <ChevronRight size={16} className="text-secondary" />
+            </button>
           ))
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
-            <div className="text-4xl mb-3">😅</div>
-            <p className="text-gray-600">没有符合条件的餐厅</p>
+          <div className="bg-surface rounded-2xl border border-divider p-8 text-center">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-muted flex items-center justify-center">
+              <Filter size={24} className="text-secondary" />
+            </div>
+            <p className="text-body text-secondary mb-3">没有符合条件的餐厅</p>
             <button
               onClick={() => setFilterTier('all')}
-              className="mt-3 text-sm text-green-600 hover:text-green-700 font-medium"
+              className="text-caption text-accent hover:text-accent-dark font-medium"
             >
               查看全部餐厅
             </button>
@@ -212,13 +224,15 @@ export function ManualSelectionScreen() {
       </div>
 
       {/* 返回按钮 */}
-      <div className="px-4 mt-4">
-        <button
+      <div className="px-4 mt-6">
+        <Button
+          variant="secondary"
           onClick={() => setSelectedMealType(null)}
-          className="w-full py-3 bg-gray-100 text-gray-700 rounded-2xl font-medium hover:bg-gray-200 transition-colors"
+          className="w-full"
         >
-          ← 重选餐点类型
-        </button>
+          <ArrowLeft size={16} />
+          重选餐点类型
+        </Button>
       </div>
     </div>
   );
