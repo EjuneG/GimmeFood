@@ -1,9 +1,10 @@
 // 营养目标设置组件
 // 提供手动设置和AI建议两种模式
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../hooks/useApp.js';
 import { callServerlessFunction } from '../utils/apiEndpoints.js';
+import { getDayBoundaryHour, setDayBoundaryHour } from '../utils/nutritionSettings.js';
 
 export function NutritionGoalSetup() {
   const { dispatch, ActionTypes } = useApp();
@@ -27,6 +28,16 @@ export function NutritionGoalSetup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // 高级设置
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [dayBoundary, setDayBoundary] = useState(4);
+
+  // 加载当前的day boundary设置
+  useEffect(() => {
+    const currentBoundary = getDayBoundaryHour();
+    setDayBoundary(currentBoundary);
+  }, []);
+
   const handleCancel = () => {
     dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'main' });
   };
@@ -45,6 +56,9 @@ export function NutritionGoalSetup() {
       setError('营养素不能为负数');
       return;
     }
+
+    // 保存day boundary设置
+    setDayBoundaryHour(dayBoundary);
 
     // 保存目标
     dispatch({
@@ -90,6 +104,9 @@ export function NutritionGoalSetup() {
       const result = await response.json();
 
       if (result.success) {
+        // 保存day boundary设置
+        setDayBoundaryHour(dayBoundary);
+
         // 保存AI生成的目标
         dispatch({
           type: ActionTypes.SET_NUTRITION_GOAL,
@@ -330,6 +347,59 @@ export function NutritionGoalSetup() {
                 </button>
               </div>
             )}
+
+            {/* 高级设置 */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <button
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="w-full flex items-center justify-between py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+              >
+                <span className="flex items-center">
+                  <span className="mr-2">⚙️</span>
+                  高级设置
+                </span>
+                <span className="text-gray-400">
+                  {showAdvanced ? '▲' : '▼'}
+                </span>
+              </button>
+
+              {showAdvanced && (
+                <div className="mt-4 space-y-3">
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <p className="text-xs text-gray-700 mb-2">
+                      🌙 <strong>营养日边界时间：</strong>
+                      设置一天的"结束"时间。例如设置为凌晨4点，那么凌晨2点吃的食物会被算作"昨天"。
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      新一天开始时间
+                    </label>
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="range"
+                        min="0"
+                        max="23"
+                        value={dayBoundary}
+                        onChange={(e) => setDayBoundary(parseInt(e.target.value))}
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="flex items-center justify-center w-20 py-2 px-3 bg-indigo-100 text-indigo-700 rounded-lg font-bold">
+                        {dayBoundary}:00
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {dayBoundary === 0 && '午夜12点 - 标准日期边界'}
+                      {dayBoundary > 0 && dayBoundary < 6 && `凌晨${dayBoundary}点 - 适合夜猫子 🦉`}
+                      {dayBoundary >= 6 && dayBoundary < 12 && `早上${dayBoundary}点 - 适合早起者 🌅`}
+                      {dayBoundary >= 12 && dayBoundary < 18 && `下午${dayBoundary - 12}点`}
+                      {dayBoundary >= 18 && `晚上${dayBoundary - 12}点`}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* 取消按钮 */}
             <button

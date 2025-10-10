@@ -1,15 +1,17 @@
 // 营养目标卡片组件
 // 显示在主界面，展示目标和进度或提示设置目标
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../hooks/useApp.js';
 import { getTodayTotal } from '../utils/nutritionStorage.js';
 import { calculateProgress, getProgressStatus } from '../utils/nutritionGoalStorage.js';
+import { WeeklyNutritionView } from './WeeklyNutritionView.jsx';
 
 export function NutritionGoalCard() {
   const { state, dispatch, ActionTypes } = useApp();
   const hasGoal = state.nutritionGoal !== null;
   const todayTotal = getTodayTotal();
+  const [viewMode, setViewMode] = useState('daily'); // 'daily' or 'weekly'
 
   const handleSetupGoal = () => {
     dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'nutrition_goal_setup' });
@@ -114,11 +116,13 @@ export function NutritionGoalCard() {
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
       {/* 标题栏 */}
       <div className="p-4 border-b border-gray-100">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
             <span className="text-2xl">📊</span>
             <div>
-              <h3 className="font-bold text-gray-900">今日营养</h3>
+              <h3 className="font-bold text-gray-900">
+                {viewMode === 'daily' ? '今日营养' : '本周统计'}
+              </h3>
               <p className="text-xs text-gray-500">目标追踪</p>
             </div>
           </div>
@@ -129,46 +133,78 @@ export function NutritionGoalCard() {
             调整目标
           </button>
         </div>
+
+        {/* View toggle buttons */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setViewMode('daily')}
+            className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
+              viewMode === 'daily'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            今日
+          </button>
+          <button
+            onClick={() => setViewMode('weekly')}
+            className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
+              viewMode === 'weekly'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            本周
+          </button>
+        </div>
       </div>
 
-      {/* 进度条 */}
-      <div className="p-4 space-y-3">
-        {nutrients.map(nutrient => {
-          const progress = calculateProgress(nutrient.current, nutrient.target);
-          const status = getProgressStatus(progress);
-          const progressWidth = Math.min(progress, 100);
+      {/* 内容区域 - 根据viewMode显示不同内容 */}
+      <div className="p-4">
+        {viewMode === 'daily' ? (
+          // 今日进度条
+          <div className="space-y-3">
+            {nutrients.map(nutrient => {
+              const progress = calculateProgress(nutrient.current, nutrient.target);
+              const status = getProgressStatus(progress);
+              const progressWidth = Math.min(progress, 100);
 
-          return (
-            <div key={nutrient.name}>
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center space-x-1">
-                  <span className="text-sm">{nutrient.emoji}</span>
-                  <span className="text-sm font-medium text-gray-700">{nutrient.name}</span>
+              return (
+                <div key={nutrient.name}>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center space-x-1">
+                      <span className="text-sm">{nutrient.emoji}</span>
+                      <span className="text-sm font-medium text-gray-700">{nutrient.name}</span>
+                    </div>
+                    <div className="text-sm">
+                      <span className={`font-bold ${
+                        status === 'good' ? 'text-green-600' :
+                        status === 'low' ? 'text-gray-600' :
+                        'text-red-600'
+                      }`}>
+                        {nutrient.current}
+                      </span>
+                      <span className="text-gray-500">/{nutrient.target}{nutrient.unit}</span>
+                    </div>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${getColorClasses(nutrient.color, status)}`}
+                      style={{ width: `${progressWidth}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="text-sm">
-                  <span className={`font-bold ${
-                    status === 'good' ? 'text-green-600' :
-                    status === 'low' ? 'text-gray-600' :
-                    'text-red-600'
-                  }`}>
-                    {nutrient.current}
-                  </span>
-                  <span className="text-gray-500">/{nutrient.target}{nutrient.unit}</span>
-                </div>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${getColorClasses(nutrient.color, status)}`}
-                  style={{ width: `${progressWidth}%` }}
-                ></div>
-              </div>
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        ) : (
+          // 本周统计
+          <WeeklyNutritionView />
+        )}
       </div>
 
       {/* 提示信息 */}
-      {goal.note && (
+      {viewMode === 'daily' && goal.note && (
         <div className="px-4 pb-4">
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
             <p className="text-xs text-indigo-700">

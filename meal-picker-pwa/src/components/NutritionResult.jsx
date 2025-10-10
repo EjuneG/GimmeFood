@@ -7,9 +7,9 @@ import { saveNutritionRecord, getTodayTotal } from '../utils/nutritionStorage.js
 
 export function NutritionResult() {
   const { state, dispatch, ActionTypes } = useApp();
-  const { currentAnalysis } = state.nutrition;
+  const { currentAnalysis, targetDate } = state.nutrition;
 
-  // 保存营养记录到本地存储
+  // 保存营养记录到本地存储（使用用户选择的目标日期）
   useEffect(() => {
     if (currentAnalysis) {
       saveNutritionRecord({
@@ -21,9 +21,9 @@ export function NutritionResult() {
         carbs: currentAnalysis.carbs,
         fat: currentAnalysis.fat,
         note: currentAnalysis.note
-      });
+      }, targetDate || 'today'); // 传递targetDate参数
     }
-  }, [currentAnalysis]);
+  }, [currentAnalysis, targetDate]);
 
   const handleClose = () => {
     // 清除营养数据，返回主界面
@@ -171,7 +171,7 @@ export function NutritionResult() {
               <div className="flex items-center space-x-2">
                 <span className="text-lg">📊</span>
                 <span className="text-sm text-gray-700">
-                  已记录到今日数据
+                  已记录到{targetDate === 'yesterday' ? '昨天' : '今天'}的数据
                 </span>
               </div>
               <button

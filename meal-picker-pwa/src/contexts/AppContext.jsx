@@ -43,7 +43,8 @@ const initialState = {
   // 营养分析状态
   nutrition: {
     currentAnalysis: null, // 当前分析结果
-    foodDescription: '' // 用户输入的食物描述
+    foodDescription: '', // 用户输入的食物描述
+    targetDate: 'today' // 'today' 或 'yesterday' - 用户选择记录到哪一天
   },
 
   // 营养目标
@@ -171,7 +172,8 @@ function appReducer(state, action) {
         },
         nutrition: {
           currentAnalysis: null,
-          foodDescription: ''
+          foodDescription: '',
+          targetDate: 'today'
         }
       };
 
@@ -219,7 +221,8 @@ function appReducer(state, action) {
         ...state,
         nutrition: {
           currentAnalysis: null,
-          foodDescription: ''
+          foodDescription: '',
+          targetDate: 'today'
         }
       };
 
@@ -229,6 +232,15 @@ function appReducer(state, action) {
         nutrition: {
           ...state.nutrition,
           foodDescription: action.payload
+        }
+      };
+
+    case ActionTypes.SET_TARGET_DATE:
+      return {
+        ...state,
+        nutrition: {
+          ...state.nutrition,
+          targetDate: action.payload
         }
       };
 

@@ -5,14 +5,22 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../hooks/useApp.js';
 import { MEAL_TYPE_NAMES } from '../utils/storage.js';
 import { callServerlessFunction } from '../utils/apiEndpoints.js';
-import { getRestaurantDishes, getCachedNutritionData } from '../utils/nutritionStorage.js';
+import { getRestaurantDishes, getCachedNutritionData, getYesterdayTotal } from '../utils/nutritionStorage.js';
 
 export function NutritionInput() {
   const { state, dispatch, ActionTypes } = useApp();
   const { selectedRestaurant, selectedMealType } = state.currentFlow;
+  const targetDate = state.nutrition.targetDate || 'today';
   const [foodInput, setFoodInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // 获取昨天的营养总和（用于显示）
+  const yesterdayTotal = useMemo(() => getYesterdayTotal(), [targetDate]);
+
+  const handleDateChange = (newDate) => {
+    dispatch({ type: ActionTypes.SET_TARGET_DATE, payload: newDate });
+  };
 
   const handleCancel = () => {
     // 取消营养记录，返回主界面
@@ -141,6 +149,59 @@ export function NutritionInput() {
             <p className="text-sm text-gray-600">
               简单描述即可，AI会帮你分析营养
             </p>
+          </div>
+
+          {/* 日期选择器 */}
+          <div className="mb-4">
+            <p className="text-xs text-gray-600 mb-2">📅 记录到哪一天？</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleDateChange('today')}
+                className={`flex-1 py-2 px-4 rounded-xl font-medium transition-all ${
+                  targetDate === 'today'
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+                disabled={loading}
+              >
+                今天
+              </button>
+              <button
+                onClick={() => handleDateChange('yesterday')}
+                className={`flex-1 py-2 px-4 rounded-xl font-medium transition-all ${
+                  targetDate === 'yesterday'
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+                disabled={loading}
+              >
+                昨天
+              </button>
+            </div>
+            {/* 显示昨天的当前总量（如果选择了昨天） */}
+            {targetDate === 'yesterday' && (
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs font-medium text-blue-800 mb-1">昨天的营养统计：</p>
+                <div className="grid grid-cols-4 gap-2 text-xs">
+                  <div className="text-center">
+                    <p className="text-blue-600 font-bold">{yesterdayTotal.calories}</p>
+                    <p className="text-gray-600">千卡</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-blue-600 font-bold">{yesterdayTotal.protein}g</p>
+                    <p className="text-gray-600">蛋白</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-blue-600 font-bold">{yesterdayTotal.carbs}g</p>
+                    <p className="text-gray-600">碳水</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-blue-600 font-bold">{yesterdayTotal.fat}g</p>
+                    <p className="text-gray-600">脂肪</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 餐厅信息 */}

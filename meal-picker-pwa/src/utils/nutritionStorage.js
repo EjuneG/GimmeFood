@@ -1,5 +1,7 @@
 // 营养数据本地存储工具
 
+import { getNutritionDate, getNutritionDateFromTimestamp } from './nutritionSettings.js';
+
 const STORAGE_KEY = 'gimmefood_nutrition_history';
 
 /**
@@ -13,13 +15,27 @@ const STORAGE_KEY = 'gimmefood_nutrition_history';
  * @param {number} record.carbs - 碳水化合物(克)
  * @param {number} record.fat - 脂肪(克)
  * @param {string} record.note - 营养提示
+ * @param {string} [targetDate] - 可选：指定记录到哪一天 ('today' | 'yesterday' | null)
  */
-export function saveNutritionRecord(record) {
+export function saveNutritionRecord(record, targetDate = null) {
   const history = getNutritionHistory();
+
+  // 确定记录的日期
+  let nutritionDate;
+  if (targetDate === 'yesterday') {
+    // 记录到昨天
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    nutritionDate = yesterday.toLocaleDateString('zh-CN');
+  } else {
+    // 默认使用getNutritionDate()，会考虑day boundary
+    nutritionDate = getNutritionDate();
+  }
+
   const newRecord = {
     ...record,
     timestamp: new Date().toISOString(),
-    date: new Date().toLocaleDateString('zh-CN')
+    date: nutritionDate
   };
 
   history.push(newRecord);
@@ -53,13 +69,25 @@ export function getNutritionHistory() {
 }
 
 /**
- * 获取今天的营养记录
+ * 获取今天的营养记录（考虑day boundary设置）
  * @returns {Array} 今天的营养记录数组
  */
 export function getTodayNutrition() {
-  const today = new Date().toLocaleDateString('zh-CN');
+  const today = getNutritionDate();
   const history = getNutritionHistory();
   return history.filter(record => record.date === today);
+}
+
+/**
+ * 获取昨天的营养记录
+ * @returns {Array} 昨天的营养记录数组
+ */
+export function getYesterdayNutrition() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayDate = yesterday.toLocaleDateString('zh-CN');
+  const history = getNutritionHistory();
+  return history.filter(record => record.date === yesterdayDate);
 }
 
 /**
@@ -69,6 +97,20 @@ export function getTodayNutrition() {
 export function getTodayTotal() {
   const todayRecords = getTodayNutrition();
   return todayRecords.reduce((total, record) => ({
+    calories: total.calories + (record.calories || 0),
+    protein: total.protein + (record.protein || 0),
+    carbs: total.carbs + (record.carbs || 0),
+    fat: total.fat + (record.fat || 0)
+  }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+}
+
+/**
+ * 计算昨天的营养总和
+ * @returns {Object} 营养总和对象 {calories, protein, carbs, fat}
+ */
+export function getYesterdayTotal() {
+  const yesterdayRecords = getYesterdayNutrition();
+  return yesterdayRecords.reduce((total, record) => ({
     calories: total.calories + (record.calories || 0),
     protein: total.protein + (record.protein || 0),
     carbs: total.carbs + (record.carbs || 0),
