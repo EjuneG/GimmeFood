@@ -3,15 +3,22 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../hooks/useApp.js';
-import { getTodayTotal } from '../utils/nutritionStorage.js';
+import { getTodayTotal, getYesterdayTotal } from '../utils/nutritionStorage.js';
 import { calculateProgress, getProgressStatus } from '../utils/nutritionGoalStorage.js';
 import { WeeklyNutritionView } from './WeeklyNutritionView.jsx';
 
 export function NutritionGoalCard() {
   const { state, dispatch, ActionTypes } = useApp();
   const hasGoal = state.nutritionGoal !== null;
-  const todayTotal = getTodayTotal();
+  const targetDate = state.nutrition.targetDate || 'today';
   const [viewMode, setViewMode] = useState('daily'); // 'daily' or 'weekly'
+
+  // Get data based on selected date
+  const dayTotal = targetDate === 'yesterday' ? getYesterdayTotal() : getTodayTotal();
+
+  const handleDateChange = (newDate) => {
+    dispatch({ type: ActionTypes.SET_TARGET_DATE, payload: newDate });
+  };
 
   const handleSetupGoal = () => {
     dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'nutrition_goal_setup' });
@@ -46,7 +53,7 @@ export function NutritionGoalCard() {
   const nutrients = [
     {
       name: '热量',
-      current: todayTotal.calories,
+      current: dayTotal.calories,
       target: goal.calories,
       unit: '千卡',
       color: 'orange',
@@ -54,7 +61,7 @@ export function NutritionGoalCard() {
     },
     {
       name: '蛋白质',
-      current: todayTotal.protein,
+      current: dayTotal.protein,
       target: goal.protein,
       unit: 'g',
       color: 'blue',
@@ -62,7 +69,7 @@ export function NutritionGoalCard() {
     },
     {
       name: '碳水',
-      current: todayTotal.carbs,
+      current: dayTotal.carbs,
       target: goal.carbs,
       unit: 'g',
       color: 'yellow',
@@ -70,7 +77,7 @@ export function NutritionGoalCard() {
     },
     {
       name: '脂肪',
-      current: todayTotal.fat,
+      current: dayTotal.fat,
       target: goal.fat,
       unit: 'g',
       color: 'purple',
@@ -121,7 +128,9 @@ export function NutritionGoalCard() {
             <span className="text-2xl">📊</span>
             <div>
               <h3 className="font-bold text-gray-900">
-                {viewMode === 'daily' ? '今日营养' : '本周统计'}
+                {viewMode === 'daily'
+                  ? (targetDate === 'yesterday' ? '昨日营养' : '今日营养')
+                  : '本周统计'}
               </h3>
               <p className="text-xs text-gray-500">目标追踪</p>
             </div>
@@ -134,6 +143,32 @@ export function NutritionGoalCard() {
           </button>
         </div>
 
+        {/* Date selector (only show in daily view) */}
+        {viewMode === 'daily' && (
+          <div className="flex gap-2 mb-2">
+            <button
+              onClick={() => handleDateChange('today')}
+              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${
+                targetDate === 'today'
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              今天
+            </button>
+            <button
+              onClick={() => handleDateChange('yesterday')}
+              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${
+                targetDate === 'yesterday'
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              昨天
+            </button>
+          </div>
+        )}
+
         {/* View toggle buttons */}
         <div className="flex gap-2">
           <button
@@ -144,7 +179,7 @@ export function NutritionGoalCard() {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            今日
+            每日
           </button>
           <button
             onClick={() => setViewMode('weekly')}

@@ -1,25 +1,16 @@
 // 本周营养统计视图
-// 显示本周的营养摄入总和和平均值
+// 显示每日目标达成情况
 
 import React, { useMemo } from 'react';
 import { useApp } from '../hooks/useApp.js';
-import { getWeekTotal, getNutritionByDateRange } from '../utils/nutritionStorage.js';
+import { getNutritionByDateRange } from '../utils/nutritionStorage.js';
 import { calculateProgress, getProgressStatus } from '../utils/nutritionGoalStorage.js';
 
 export function WeeklyNutritionView() {
   const { state } = useApp();
   const goal = state.nutritionGoal;
-  const weekTotal = useMemo(() => getWeekTotal(), []);
 
-  // 计算每日平均值
-  const dailyAverage = useMemo(() => ({
-    calories: Math.round(weekTotal.calories / 7),
-    protein: Math.round(weekTotal.protein / 7),
-    carbs: Math.round(weekTotal.carbs / 7),
-    fat: Math.round(weekTotal.fat / 7)
-  }), [weekTotal]);
-
-  // 获取本周每一天的数据（用于详细视图）
+  // 获取本周每一天的数据
   const weeklyBreakdown = useMemo(() => {
     const today = new Date();
     const weekStart = new Date(today);
@@ -41,57 +32,35 @@ export function WeeklyNutritionView() {
         fat: total.fat + (record.fat || 0)
       }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
+      // 计算每个营养素的进度
+      const caloriesProgress = goal ? calculateProgress(dayTotal.calories, goal.calories) : 0;
+      const proteinProgress = goal ? calculateProgress(dayTotal.protein, goal.protein) : 0;
+      const carbsProgress = goal ? calculateProgress(dayTotal.carbs, goal.carbs) : 0;
+      const fatProgress = goal ? calculateProgress(dayTotal.fat, goal.fat) : 0;
+
       days.push({
         date: day,
         dateStr: day.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric', weekday: 'short' }),
-        ...dayTotal
+        ...dayTotal,
+        caloriesProgress,
+        proteinProgress,
+        carbsProgress,
+        fatProgress,
+        caloriesStatus: getProgressStatus(caloriesProgress)
       });
     }
     return days;
-  }, []);
+  }, [goal]);
 
-  const nutrients = [
-    {
-      name: '热量',
-      weekly: weekTotal.calories,
-      daily: dailyAverage.calories,
-      weeklyGoal: goal ? goal.calories * 7 : null,
-      dailyGoal: goal ? goal.calories : null,
-      unit: '千卡',
-      color: 'orange',
-      emoji: '🔥'
-    },
-    {
-      name: '蛋白质',
-      weekly: weekTotal.protein,
-      daily: dailyAverage.protein,
-      weeklyGoal: goal ? goal.protein * 7 : null,
-      dailyGoal: goal ? goal.protein : null,
-      unit: 'g',
-      color: 'blue',
-      emoji: '💪'
-    },
-    {
-      name: '碳水',
-      weekly: weekTotal.carbs,
-      daily: dailyAverage.carbs,
-      weeklyGoal: goal ? goal.carbs * 7 : null,
-      dailyGoal: goal ? goal.carbs : null,
-      unit: 'g',
-      color: 'yellow',
-      emoji: '🍞'
-    },
-    {
-      name: '脂肪',
-      weekly: weekTotal.fat,
-      daily: dailyAverage.fat,
-      weeklyGoal: goal ? goal.fat * 7 : null,
-      dailyGoal: goal ? goal.fat : null,
-      unit: 'g',
-      color: 'purple',
-      emoji: '🥑'
-    }
-  ];
+  // 计算本周平均达成率（基于热量）
+  const weekStats = useMemo(() => {
+    const totalDays = weeklyBreakdown.length;
+    const daysWithData = weeklyBreakdown.filter(day => day.calories > 0).length;
+    const avgProgress = weeklyBreakdown.reduce((sum, day) => sum + day.caloriesProgress, 0) / totalDays;
+    const daysOnTarget = weeklyBreakdown.filter(day => day.caloriesStatus === 'good').length;
+
+    return { daysWithData, avgProgress: Math.round(avgProgress), daysOnTarget };
+  }, [weeklyBreakdown]);
 
   const getColorClasses = (color, status) => {
     const colorMap = {
@@ -133,117 +102,102 @@ export function WeeklyNutritionView() {
 
   return (
     <div className="space-y-4">
-      {/* 本周总计 */}
-      <div>
-        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-          <span className="mr-2">📊</span>
-          本周总计
-        </h4>
-        <div className="space-y-3">
-          {nutrients.map(nutrient => {
-            const progress = nutrient.weeklyGoal
-              ? calculateProgress(nutrient.weekly, nutrient.weeklyGoal)
-              : 0;
-            const status = getProgressStatus(progress);
-            const progressWidth = Math.min(progress, 100);
-
-            return (
-              <div key={nutrient.name}>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center space-x-1">
-                    <span className="text-sm">{nutrient.emoji}</span>
-                    <span className="text-sm font-medium text-gray-700">{nutrient.name}</span>
-                  </div>
-                  <div className="text-sm">
-                    <span className={`font-bold ${
-                      nutrient.weeklyGoal ? (
-                        status === 'good' ? 'text-green-600' :
-                        status === 'low' ? 'text-gray-600' :
-                        'text-red-600'
-                      ) : 'text-gray-700'
-                    }`}>
-                      {nutrient.weekly}
-                    </span>
-                    {nutrient.weeklyGoal && (
-                      <span className="text-gray-500">/{nutrient.weeklyGoal}{nutrient.unit}</span>
-                    )}
-                    {!nutrient.weeklyGoal && (
-                      <span className="text-gray-500"> {nutrient.unit}</span>
-                    )}
-                  </div>
-                </div>
-                {nutrient.weeklyGoal && (
-                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${getColorClasses(nutrient.color, status)}`}
-                      style={{ width: `${progressWidth}%` }}
-                    ></div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 日均摄入 */}
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-          <span className="mr-2">📈</span>
-          日均摄入
-        </h4>
-        <div className="grid grid-cols-4 gap-3">
-          {nutrients.map(nutrient => (
-            <div key={nutrient.name} className="text-center">
-              <div className={`text-lg font-bold ${getColorClasses(nutrient.color, 'text')}`}>
-                {nutrient.daily}
-              </div>
-              <div className="text-xs text-gray-600 mt-1">
-                {nutrient.emoji} {nutrient.unit}
-              </div>
-              {nutrient.dailyGoal && (
-                <div className="text-xs text-gray-500 mt-0.5">
-                  / {nutrient.dailyGoal}
-                </div>
-              )}
+      {/* 本周概览 */}
+      {goal && (
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200">
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div>
+              <div className="text-2xl font-bold text-indigo-700">{weekStats.daysOnTarget}</div>
+              <div className="text-xs text-gray-600 mt-1">天达标</div>
             </div>
-          ))}
+            <div>
+              <div className="text-2xl font-bold text-purple-700">{weekStats.daysWithData}</div>
+              <div className="text-xs text-gray-600 mt-1">天有记录</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-blue-700">{weekStats.avgProgress}%</div>
+              <div className="text-xs text-gray-600 mt-1">平均达成</div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 每日详情 */}
       <div>
         <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
           <span className="mr-2">📅</span>
-          每日详情
+          每日目标达成
         </h4>
-        <div className="space-y-2">
-          {weeklyBreakdown.map((day, index) => (
-            <div
-              key={index}
-              className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-700">
-                  {day.dateStr}
-                </span>
-                <div className="flex space-x-3 text-xs">
-                  <span className="text-orange-600">
-                    {day.calories}<span className="text-gray-500 ml-0.5">kcal</span>
+        <div className="space-y-3">
+          {weeklyBreakdown.map((day, index) => {
+            const hasData = day.calories > 0;
+            const status = day.caloriesStatus;
+            const progressWidth = Math.min(day.caloriesProgress, 100);
+
+            return (
+              <div key={index} className={`rounded-lg p-3 border ${
+                hasData ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100'
+              }`}>
+                {/* Day header */}
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">
+                    {day.dateStr}
                   </span>
-                  <span className="text-blue-600">
-                    {day.protein}<span className="text-gray-500 ml-0.5">P</span>
-                  </span>
-                  <span className="text-yellow-600">
-                    {day.carbs}<span className="text-gray-500 ml-0.5">C</span>
-                  </span>
-                  <span className="text-purple-600">
-                    {day.fat}<span className="text-gray-500 ml-0.5">F</span>
-                  </span>
+                  {goal && hasData && (
+                    <span className={`text-xs font-semibold ${
+                      status === 'good' ? 'text-green-600' :
+                      status === 'low' ? 'text-gray-600' :
+                      'text-red-600'
+                    }`}>
+                      {day.caloriesProgress}%
+                    </span>
+                  )}
+                  {!hasData && (
+                    <span className="text-xs text-gray-400">未记录</span>
+                  )}
                 </div>
+
+                {/* Progress bar for calories */}
+                {goal && hasData && (
+                  <div className="mb-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          status === 'good' ? 'bg-green-500' :
+                          status === 'low' ? 'bg-gray-400' :
+                          'bg-red-500'
+                        }`}
+                        style={{ width: `${progressWidth}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Nutrient details */}
+                {hasData && (
+                  <div className="flex justify-between text-xs">
+                    <div className="flex items-center space-x-1">
+                      <span className="text-orange-600 font-semibold">{day.calories}</span>
+                      <span className="text-gray-500">
+                        {goal ? `/ ${goal.calories}` : ''} 千卡
+                      </span>
+                    </div>
+                    <div className="flex space-x-3">
+                      <span className="text-blue-600">
+                        {day.protein}<span className="text-gray-500 ml-0.5">P</span>
+                      </span>
+                      <span className="text-yellow-600">
+                        {day.carbs}<span className="text-gray-500 ml-0.5">C</span>
+                      </span>
+                      <span className="text-purple-600">
+                        {day.fat}<span className="text-gray-500 ml-0.5">F</span>
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
