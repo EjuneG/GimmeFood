@@ -1,6 +1,8 @@
 // 数据管理组件 - 导入导出功能
 
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Upload, Download, AlertTriangle, X, Copy, Check } from 'lucide-react';
 import { useApp } from '../hooks/useApp.js';
 import { useRestaurants } from '../hooks/useRestaurants.js';
 import { getUserData } from '../utils/storage.js';
@@ -11,6 +13,9 @@ import {
   mergeDuplicateRestaurants,
   normalizeImportedRestaurants
 } from '../utils/dataSync.js';
+import { Button } from './ui/Button.jsx';
+import { Card } from './ui/Card.jsx';
+import { cn } from '../utils/cn.js';
 
 export function DataManagement({ isOpen, onClose }) {
   const { dispatch, ActionTypes } = useApp();
@@ -149,113 +154,169 @@ export function DataManagement({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden">
-        {/* 头部 */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">数据管理</h2>
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-white/20 rounded-lg"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-primary/50 flex items-center justify-center z-50 p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-md max-h-[90vh] flex flex-col"
+        >
+          <Card className="flex flex-col max-h-full overflow-hidden">
+            {/* 头部 */}
+            <div className="bg-surface border-b border-divider p-4 flex items-center justify-between flex-shrink-0">
+              <h2 className="text-section font-semibold">数据管理</h2>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                aria-label="关闭"
+              >
+                <X size={20} className="text-secondary" />
+              </button>
+            </div>
 
-        {/* 标签切换 */}
-        <div className="flex border-b">
-          <button
-            onClick={() => setCurrentTab('export')}
-            className={`flex-1 p-3 text-sm font-medium ${
-              currentTab === 'export'
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                : 'text-gray-600 hover:text-blue-600'
-            }`}
-          >
-            导出数据
-          </button>
-          <button
-            onClick={() => setCurrentTab('import')}
-            className={`flex-1 p-3 text-sm font-medium ${
-              currentTab === 'import'
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                : 'text-gray-600 hover:text-blue-600'
-            }`}
-          >
-            导入数据
-          </button>
-        </div>
+            {/* 标签切换 */}
+            <div className="flex border-b border-divider flex-shrink-0">
+              <button
+                onClick={() => setCurrentTab('export')}
+                className={cn(
+                  "flex-1 py-3 px-4 text-body font-medium transition-colors relative",
+                  currentTab === 'export'
+                    ? 'text-accent'
+                    : 'text-secondary hover:text-primary'
+                )}
+              >
+                <Upload size={16} className="inline mr-2" />
+                导出数据
+                {currentTab === 'export' && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent"
+                  />
+                )}
+              </button>
+              <button
+                onClick={() => setCurrentTab('import')}
+                className={cn(
+                  "flex-1 py-3 px-4 text-body font-medium transition-colors relative",
+                  currentTab === 'import'
+                    ? 'text-accent'
+                    : 'text-secondary hover:text-primary'
+                )}
+              >
+                <Download size={16} className="inline mr-2" />
+                导入数据
+                {currentTab === 'import' && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent"
+                  />
+                )}
+              </button>
+            </div>
 
-        <div className="p-4 overflow-y-auto max-h-96">
-          {currentTab === 'export' ? (
-            <ExportTab
-              restaurants={restaurants}
-              exportedText={exportedText}
-              copySuccess={copySuccess}
-              onExport={handleExport}
-              onCopy={handleCopy}
-            />
-          ) : (
-            <ImportTab
-              importText={importText}
-              setImportText={setImportText}
-              importStatus={importStatus}
-              duplicateConflicts={duplicateConflicts}
-              onImport={handleImport}
-              onConflictResolution={handleConflictResolution}
-            />
-          )}
-        </div>
-      </div>
-    </div>
+            {/* 内容区域 */}
+            <div className="p-4 overflow-y-auto flex-1">
+              <AnimatePresence mode="wait">
+                {currentTab === 'export' ? (
+                  <ExportTab
+                    key="export"
+                    restaurants={restaurants}
+                    exportedText={exportedText}
+                    copySuccess={copySuccess}
+                    onExport={handleExport}
+                    onCopy={handleCopy}
+                  />
+                ) : (
+                  <ImportTab
+                    key="import"
+                    importText={importText}
+                    setImportText={setImportText}
+                    importStatus={importStatus}
+                    duplicateConflicts={duplicateConflicts}
+                    onImport={handleImport}
+                    onConflictResolution={handleConflictResolution}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
+          </Card>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
 // 导出标签页组件
 function ExportTab({ restaurants, exportedText, copySuccess, onExport, onCopy }) {
   return (
-    <div className="space-y-4">
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      transition={{ duration: 0.2 }}
+      className="space-y-4"
+    >
       <div className="text-center">
-        <div className="text-4xl mb-2">📤</div>
-        <h3 className="font-bold text-gray-900">导出餐厅数据</h3>
-        <p className="text-sm text-gray-600 mt-1">
+        <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+          <Upload size={32} className="text-accent" />
+        </div>
+        <h3 className="text-body font-semibold mb-1">导出餐厅数据</h3>
+        <p className="text-caption text-secondary">
           当前有 {restaurants.length} 家餐厅
         </p>
       </div>
 
       {!exportedText ? (
-        <button
+        <Button
+          variant="primary"
+          size="large"
           onClick={onExport}
-          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl font-medium hover:shadow-lg transition-all"
+          className="w-full"
         >
+          <Upload size={20} />
           生成导出数据
-        </button>
+        </Button>
       ) : (
         <div className="space-y-3">
           <textarea
             id="export-text-area"
             readOnly
             value={exportedText}
-            className="w-full h-32 p-3 border border-gray-200 rounded-lg text-xs font-mono bg-gray-50 resize-none"
+            className="w-full h-32 p-3 border-2 border-divider rounded-xl text-caption font-mono bg-muted resize-none"
             placeholder="生成的数据将显示在这里..."
           />
 
-          <button
+          <Button
+            variant={copySuccess ? "primary" : "secondary"}
+            size="large"
             onClick={onCopy}
-            className={`w-full py-3 rounded-xl font-medium transition-all ${
-              copySuccess
-                ? 'bg-green-500 text-white'
-                : 'bg-blue-500 text-white hover:bg-blue-600'
-            }`}
+            className="w-full"
           >
-            {copySuccess ? '✓ 已复制到剪贴板' : '复制数据'}
-          </button>
+            {copySuccess ? (
+              <>
+                <Check size={20} />
+                已复制到剪贴板
+              </>
+            ) : (
+              <>
+                <Copy size={20} />
+                复制数据
+              </>
+            )}
+          </Button>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-xs text-blue-800">
-              💡 <strong>使用说明：</strong>
+          <Card className="p-3 bg-muted">
+            <p className="text-caption text-secondary">
+              <strong>使用说明：</strong>
               <br />
               1. 点击"复制数据"按钮
               <br />
@@ -265,10 +326,10 @@ function ExportTab({ restaurants, exportedText, copySuccess, onExport, onCopy })
               <br />
               4. 粘贴刚才复制的文本并导入
             </p>
-          </div>
+          </Card>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -297,51 +358,71 @@ function ImportTab({
   // 如果需要解决冲突
   if (importStatus?.needsConflictResolution) {
     return (
-      <div className="space-y-4">
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.2 }}
+        className="space-y-4"
+      >
         <div className="text-center">
-          <div className="text-4xl mb-2">⚠️</div>
-          <h3 className="font-bold text-gray-900">发现重复餐厅</h3>
-          <p className="text-sm text-gray-600">
+          <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle size={32} className="text-accent" />
+          </div>
+          <h3 className="text-body font-semibold mb-1">发现重复餐厅</h3>
+          <p className="text-caption text-secondary">
             {importStatus.message}
           </p>
         </div>
 
         <div className="max-h-48 overflow-y-auto space-y-3">
           {duplicateConflicts.map((conflict, index) => (
-            <div key={conflict.key} className="border border-gray-200 rounded-lg p-3">
-              <h4 className="font-medium text-gray-900 mb-2">
+            <Card key={conflict.key} className="p-3">
+              <h4 className="text-body font-medium mb-2">
                 {conflict.existing.name} ({conflict.existing.tier})
               </h4>
               <select
                 value={conflictResolutions[index] || 'smart_merge'}
                 onChange={(e) => handleResolutionChange(index, e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded text-sm"
+                className="w-full p-2 border-2 border-divider rounded-lg text-body bg-surface
+                  focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
               >
                 <option value="smart_merge">智能合并（推荐）</option>
                 <option value="keep_existing">保留现有数据</option>
                 <option value="keep_imported">使用导入数据</option>
               </select>
-            </div>
+            </Card>
           ))}
         </div>
 
-        <button
+        <Button
+          variant="primary"
+          size="large"
           onClick={handleApplyResolutions}
-          className="w-full bg-gradient-to-r from-green-500 to-blue-600 text-white py-3 rounded-xl font-medium hover:shadow-lg transition-all"
+          className="w-full"
         >
+          <Check size={20} />
           应用合并策略并导入
-        </button>
-      </div>
+        </Button>
+      </motion.div>
     );
   }
 
   // 正常导入界面
   return (
-    <div className="space-y-4">
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.2 }}
+      className="space-y-4"
+    >
       <div className="text-center">
-        <div className="text-4xl mb-2">📥</div>
-        <h3 className="font-bold text-gray-900">导入餐厅数据</h3>
-        <p className="text-sm text-gray-600 mt-1">
+        <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+          <Download size={32} className="text-accent" />
+        </div>
+        <h3 className="text-body font-semibold mb-1">导入餐厅数据</h3>
+        <p className="text-caption text-secondary">
           从其他设备同步餐厅数据
         </p>
       </div>
@@ -351,32 +432,47 @@ function ImportTab({
           value={importText}
           onChange={(e) => setImportText(e.target.value)}
           placeholder="在这里粘贴从其他设备导出的数据文本..."
-          className="w-full h-32 p-3 border border-gray-300 rounded-lg text-sm resize-none"
+          className="w-full h-32 p-3 border-2 border-divider rounded-xl text-body resize-none
+            focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent bg-surface"
         />
 
-        <button
+        <Button
+          variant="primary"
+          size="large"
           onClick={onImport}
           disabled={!importText.trim()}
-          className="w-full bg-gradient-to-r from-green-500 to-blue-600 text-white py-3 rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full"
         >
+          <Download size={20} />
           导入数据
-        </button>
+        </Button>
 
         {importStatus && (
-          <div className={`p-3 rounded-lg ${
+          <Card className={cn(
+            "p-3",
             importStatus.success
-              ? 'bg-green-50 border border-green-200 text-green-800'
-              : 'bg-red-50 border border-red-200 text-red-800'
-          }`}>
-            <p className="text-sm">
-              {importStatus.success ? '✓' : '✗'} {importStatus.message}
+              ? 'bg-accent/10 border-accent/20'
+              : 'bg-accent/10 border-accent'
+          )}>
+            <p className="text-body">
+              {importStatus.success ? (
+                <>
+                  <Check size={16} className="inline text-accent mr-1" />
+                  {importStatus.message}
+                </>
+              ) : (
+                <>
+                  <X size={16} className="inline text-accent mr-1" />
+                  {importStatus.message}
+                </>
+              )}
             </p>
-          </div>
+          </Card>
         )}
 
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-          <p className="text-xs text-amber-800">
-            💡 <strong>导入提示：</strong>
+        <Card className="p-3 bg-muted">
+          <p className="text-caption text-secondary">
+            <strong>导入提示：</strong>
             <br />
             • 重复餐厅将智能合并数据
             <br />
@@ -384,8 +480,8 @@ function ImportTab({
             <br />
             • 支持跨版本数据导入
           </p>
-        </div>
+        </Card>
       </div>
-    </div>
+    </motion.div>
   );
 }
