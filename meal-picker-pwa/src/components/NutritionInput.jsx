@@ -2,10 +2,15 @@
 // 用户输入食物描述，调用API进行营养分析
 
 import React, { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Sparkles, Clock, Plus } from 'lucide-react';
 import { useApp } from '../hooks/useApp.js';
 import { MEAL_TYPE_NAMES } from '../utils/storage.js';
 import { callServerlessFunction } from '../utils/apiEndpoints.js';
 import { getRestaurantDishes, getCachedNutritionData } from '../utils/nutritionStorage.js';
+import { Button } from './ui/Button.jsx';
+import { Card } from './ui/Card.jsx';
+import { cn } from '../utils/cn.js';
 
 export function NutritionInput() {
   const { state, dispatch, ActionTypes } = useApp();
@@ -128,130 +133,169 @@ export function NutritionInput() {
     ];
   }, [selectedRestaurant?.name]);
 
+  const hasHistory = selectedRestaurant?.name &&
+    getRestaurantDishes(selectedRestaurant.name, 1).length > 0;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-4">
-      <div className="max-w-md mx-auto pt-8">
-        <div className="bg-white rounded-2xl shadow-xl p-6">
-          {/* 标题 */}
-          <div className="text-center mb-6">
-            <div className="text-4xl mb-3">🍜</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              你吃了什么？
-            </h2>
-            <p className="text-sm text-gray-600">
-              简单描述即可，AI会帮你分析营养
-            </p>
-          </div>
-
-          {/* 餐厅/做饭信息 */}
-          {selectedRestaurant && (
-            <div className={`rounded-lg p-3 mb-4 border ${
-              selectedRestaurant.isHomeCooking
-                ? 'bg-amber-50 border-amber-200'
-                : 'bg-purple-50 border-purple-200'
-            }`}>
-              <div className="flex items-center space-x-2">
-                <span className="text-lg">
-                  {selectedRestaurant.isHomeCooking ? '👨‍🍳' : '🍽️'}
-                </span>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-800">
-                    {selectedRestaurant.name}
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    {MEAL_TYPE_NAMES[selectedMealType]}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 输入提示 */}
-          <div className="mb-3">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              食物描述
-            </label>
-            <p className="text-xs text-gray-500 mb-2">
-              💡 提示：越详细越准确（例如：份量、配菜等）
-            </p>
-          </div>
-
-          {/* 文本输入框 */}
-          <textarea
-            value={foodInput}
-            onChange={(e) => setFoodInput(e.target.value)}
-            placeholder={
-              selectedRestaurant?.isHomeCooking
-                ? "例如：番茄炒蛋、米饭、青菜汤"
-                : "例如：牛肉拉面、加蛋、小菜"
-            }
-            rows="4"
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none resize-none text-gray-800 placeholder-gray-400"
-            disabled={loading}
-          />
-
-          {/* 错误提示 */}
-          {error && (
-            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-700">❌ {error}</p>
-            </div>
-          )}
-
-          {/* 示例建议或历史菜品 */}
-          <div className="mt-4 mb-6">
-            <p className="text-xs text-gray-600 mb-2">
-              {selectedRestaurant?.name && getRestaurantDishes(selectedRestaurant.name, 1).length > 0
-                ? '🕐 你之前吃过：'
-                : '💡 示例：'}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {examples.map((example, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleExampleClick(example)}
-                  className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs hover:bg-purple-200 transition-colors"
-                  disabled={loading}
-                >
-                  {example}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 行动按钮 */}
-          <div className="space-y-3">
-            <button
-              onClick={handleSubmit}
-              disabled={loading || !foodInput.trim()}
-              className="w-full py-4 px-6 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-700 transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>分析中...</span>
-                </span>
-              ) : (
-                '分析营养 🔍'
-              )}
-            </button>
-
-            <button
-              onClick={handleCancel}
-              disabled={loading}
-              className="w-full py-3 px-4 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors disabled:opacity-50"
-            >
-              取消
-            </button>
-          </div>
-
-          {/* 底部提示 */}
-          <div className="mt-6 text-center">
-            <p className="text-xs text-gray-500">
-              * 仅供参考，基于AI粗略估算
-            </p>
-          </div>
+    <div className="min-h-screen bg-background pb-20">
+      {/* Header */}
+      <div className="bg-surface border-b border-divider px-6 pt-12 pb-8">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={handleCancel}
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
+            aria-label="返回"
+          >
+            <ArrowLeft size={20} className="text-secondary" />
+          </button>
+        </div>
+        <div>
+          <h1 className="text-title font-semibold mb-2">记录营养</h1>
+          <p className="text-caption text-secondary">
+            简单描述即可，AI会帮你分析营养成分
+          </p>
         </div>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="px-4 pt-6 space-y-4"
+      >
+        {/* 餐厅/做饭信息 */}
+        {selectedRestaurant && (
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "w-10 h-10 rounded-lg flex items-center justify-center",
+                selectedRestaurant.isHomeCooking ? "bg-accent/10" : "bg-muted"
+              )}>
+                <Sparkles size={20} className={cn(
+                  selectedRestaurant.isHomeCooking ? "text-accent" : "text-secondary"
+                )} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-body font-medium">{selectedRestaurant.name}</h3>
+                <p className="text-caption text-secondary">
+                  {MEAL_TYPE_NAMES[selectedMealType]}
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* 输入区域 */}
+        <Card className="p-6">
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="food-input" className="block text-body font-medium mb-2">
+                你吃了什么？<span className="text-accent">*</span>
+              </label>
+              <p className="text-caption text-secondary mb-3">
+                提示：越详细越准确（例如：份量、配菜等）
+              </p>
+              <textarea
+                id="food-input"
+                value={foodInput}
+                onChange={(e) => setFoodInput(e.target.value)}
+                placeholder={
+                  selectedRestaurant?.isHomeCooking
+                    ? "例如：番茄炒蛋、米饭、青菜汤"
+                    : "例如：牛肉拉面、加蛋、小菜"
+                }
+                rows="4"
+                className={cn(
+                  "w-full px-4 py-3 border-2 rounded-xl bg-surface",
+                  "focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent",
+                  "transition-all text-body resize-none",
+                  error ? "border-accent" : "border-divider"
+                )}
+                disabled={loading}
+                aria-invalid={!!error}
+                aria-describedby={error ? "food-input-error" : undefined}
+              />
+              {error && (
+                <p id="food-input-error" className="text-accent text-caption mt-1.5" role="alert">
+                  {error}
+                </p>
+              )}
+            </div>
+
+            {/* 示例建议或历史菜品 */}
+            {examples.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock size={14} className="text-secondary" />
+                  <p className="text-caption text-secondary">
+                    {hasHistory ? '你之前吃过：' : '示例：'}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {examples.map((example, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleExampleClick(example)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-caption transition-colors",
+                        "bg-muted text-secondary hover:bg-divider hover:text-primary",
+                        "border border-divider"
+                      )}
+                      disabled={loading}
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* 行动按钮 */}
+        <div className="space-y-3">
+          <Button
+            variant="primary"
+            size="large"
+            onClick={handleSubmit}
+            disabled={loading || !foodInput.trim()}
+            className="w-full"
+          >
+            {loading ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, ease: "linear", repeat: Infinity }}
+                >
+                  <Sparkles size={20} />
+                </motion.div>
+                <span>分析中...</span>
+              </>
+            ) : (
+              <>
+                <Plus size={20} />
+                <span>分析营养</span>
+              </>
+            )}
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={handleCancel}
+            disabled={loading}
+            className="w-full"
+          >
+            取消
+          </Button>
+        </div>
+
+        {/* 底部提示 */}
+        <div className="text-center pt-2">
+          <p className="text-caption text-secondary">
+            * 仅供参考，基于AI粗略估算
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 }
