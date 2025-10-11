@@ -2,11 +2,15 @@
 // 在用户接受推荐后显示，询问是否要记录营养
 
 import React from 'react';
+import { motion } from 'framer-motion';
+import { Lightbulb, Sparkles } from 'lucide-react';
 import { useApp } from '../hooks/useApp.js';
+import { Button } from './ui/Button.jsx';
+import { Card } from './ui/Card.jsx';
 
 export function NutritionPrompt() {
   const { state, dispatch, ActionTypes } = useApp();
-  const { selectedRestaurant, selectedMealType } = state.currentFlow;
+  const { selectedRestaurant } = state.currentFlow;
 
   const handleSkip = () => {
     // 跳过营养记录，返回主界面
@@ -19,75 +23,118 @@ export function NutritionPrompt() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-        {/* 图标和标题 */}
-        <div className="text-center mb-6">
-          <div className="text-5xl mb-4">📊</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            要记录这餐的营养吗？
-          </h2>
-          <p className="text-gray-600 text-sm">
-            (可选功能，不影响正常使用)
-          </p>
-        </div>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+        className="max-w-md w-full"
+      >
+        <Card className="p-8">
+          {/* 图标和标题 */}
+          <div className="text-center mb-6">
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
+              className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4"
+            >
+              <Sparkles className="text-accent" size={32} />
+            </motion.div>
+            <h2 className="text-section font-semibold mb-2">
+              要记录这餐的营养吗？
+            </h2>
+            <p className="text-caption text-secondary">
+              可选功能，不影响正常使用
+            </p>
+          </div>
 
-        {/* 餐厅信息 */}
-        {selectedRestaurant && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 mb-6 border border-blue-200">
-            <div className="flex items-center space-x-3">
-              <div className="text-2xl">🍽️</div>
+          {/* 餐厅信息 */}
+          {selectedRestaurant && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-muted rounded-xl p-4 mb-6"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center">
+                  <Sparkles size={20} className="text-accent" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-body font-medium">
+                    {selectedRestaurant.name}
+                  </h3>
+                  <p className="text-caption text-secondary">
+                    记录营养成分，追踪每日摄入
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* 功能说明 */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-muted rounded-lg p-4 mb-6"
+          >
+            <div className="flex items-start gap-2">
+              <Lightbulb size={16} className="text-accent mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <h3 className="font-bold text-gray-800 text-lg">
-                  {selectedRestaurant.name}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  记录营养成分，追踪每日摄入
+                <p className="text-body mb-1">
+                  <strong>AI营养分析</strong>
+                </p>
+                <p className="text-caption text-secondary">
+                  通过简单描述你吃了什么，AI会估算卡路里、蛋白质、碳水和脂肪
+                </p>
+                <p className="text-caption text-secondary mt-1">
+                  * 仅供参考，基于粗略估算
                 </p>
               </div>
             </div>
-          </div>
-        )}
+          </motion.div>
 
-        {/* 功能说明 */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <div className="flex items-start space-x-2">
-            <div className="text-lg">💡</div>
-            <div className="flex-1">
-              <p className="text-sm text-gray-700">
-                <strong>AI营养分析</strong>：通过简单描述你吃了什么，AI会估算卡路里、蛋白质、碳水和脂肪。
-              </p>
-              <p className="text-xs text-gray-600 mt-1">
-                * 仅供参考，基于粗略估算
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* 行动按钮 */}
-        <div className="space-y-3">
-          <button
-            onClick={handleRecord}
-            className="w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-bold text-lg hover:from-blue-600 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg"
+          {/* 行动按钮 */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="space-y-3"
           >
-            记录营养 📝
-          </button>
+            <Button
+              variant="primary"
+              size="large"
+              onClick={handleRecord}
+              className="w-full"
+            >
+              <Sparkles size={20} />
+              <span>记录营养</span>
+            </Button>
 
-          <button
-            onClick={handleSkip}
-            className="w-full py-3 px-4 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+            <Button
+              variant="secondary"
+              onClick={handleSkip}
+              className="w-full"
+            >
+              跳过，下次再说
+            </Button>
+          </motion.div>
+
+          {/* 底部提示 */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-6 text-center"
           >
-            跳过，下次再说
-          </button>
-        </div>
-
-        {/* 底部提示 */}
-        <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
-            营养数据仅保存在本地，不会上传到服务器
-          </p>
-        </div>
-      </div>
+            <p className="text-caption text-secondary">
+              营养数据仅保存在本地，不会上传到服务器
+            </p>
+          </motion.div>
+        </Card>
+      </motion.div>
     </div>
   );
 }

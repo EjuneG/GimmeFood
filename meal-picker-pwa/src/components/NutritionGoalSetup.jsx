@@ -2,9 +2,14 @@
 // 提供手动设置和AI建议两种模式
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Target, Flame, Dumbbell, Scale, Sparkles, ArrowLeft, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { useApp } from '../hooks/useApp.js';
 import { callServerlessFunction } from '../utils/apiEndpoints.js';
 import { getDayBoundaryHour, setDayBoundaryHour } from '../utils/nutritionSettings.js';
+import { Button } from './ui/Button.jsx';
+import { Card } from './ui/Card.jsx';
+import { cn } from '../utils/cn.js';
 
 export function NutritionGoalSetup() {
   const { dispatch, ActionTypes } = useApp();
@@ -130,287 +135,397 @@ export function NutritionGoalSetup() {
   };
 
   const goalTypeOptions = [
-    { value: 'weight_loss', label: '减脂', emoji: '🔥' },
-    { value: 'muscle_gain', label: '增肌', emoji: '💪' },
-    { value: 'maintain', label: '保持体重', emoji: '⚖️' },
-    { value: 'general_health', label: '一般健康', emoji: '🌟' }
+    { value: 'weight_loss', label: '减脂', Icon: Flame },
+    { value: 'muscle_gain', label: '增肌', Icon: Dumbbell },
+    { value: 'maintain', label: '保持体重', Icon: Scale },
+    { value: 'general_health', label: '一般健康', Icon: Sparkles }
   ];
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 p-4">
-      <div className="max-w-md mx-auto pt-8 pb-20">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* 标题 */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
-            <div className="text-center">
-              <div className="text-4xl mb-3">🎯</div>
-              <h2 className="text-2xl font-bold mb-2">设置营养目标</h2>
-              <p className="text-indigo-100 text-sm">
-                选择适合你的方式
-              </p>
-            </div>
-          </div>
+  const getDayBoundaryDescription = (hour) => {
+    if (hour === 0) return '午夜12点 - 标准日期边界';
+    if (hour > 0 && hour < 6) return `凌晨${hour}点 - 适合夜猫子 🦉`;
+    if (hour >= 6 && hour < 12) return `早上${hour}点 - 适合早起者 🌅`;
+    if (hour >= 12 && hour < 18) return `下午${hour - 12}点`;
+    return `晚上${hour - 12}点`;
+  };
 
-          {/* 模式切换标签 */}
-          <div className="flex border-b border-gray-200">
+  return (
+    <div className="min-h-screen bg-background pb-20">
+      {/* Header */}
+      <div className="bg-surface border-b border-divider px-6 pt-12 pb-8">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={handleCancel}
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
+            aria-label="返回"
+          >
+            <ArrowLeft size={20} className="text-secondary" />
+          </button>
+        </div>
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-3">
+            <Target size={24} className="text-accent" />
+          </div>
+          <h1 className="text-title font-semibold mb-2">设置营养目标</h1>
+          <p className="text-caption text-secondary">
+            选择适合你的方式
+          </p>
+        </div>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="px-4 pt-6"
+      >
+        {/* 模式切换标签 */}
+        <Card className="p-1 mb-4">
+          <div className="flex gap-1">
             <button
               onClick={() => setMode('ai')}
-              className={`flex-1 py-4 px-4 font-medium transition-colors ${
+              className={cn(
+                "flex-1 py-3 px-4 rounded-lg font-medium transition-all text-body",
                 mode === 'ai'
-                  ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
+                  ? 'bg-accent text-white'
+                  : 'text-secondary hover:bg-muted'
+              )}
             >
-              <span className="text-lg mr-2">🤖</span>
+              <Sparkles size={16} className="inline mr-2" />
               AI建议
             </button>
             <button
               onClick={() => setMode('manual')}
-              className={`flex-1 py-4 px-4 font-medium transition-colors ${
+              className={cn(
+                "flex-1 py-3 px-4 rounded-lg font-medium transition-all text-body",
                 mode === 'manual'
-                  ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
+                  ? 'bg-accent text-white'
+                  : 'text-secondary hover:bg-muted'
+              )}
             >
-              <span className="text-lg mr-2">✍️</span>
+              <Target size={16} className="inline mr-2" />
               手动设置
             </button>
           </div>
+        </Card>
 
-          <div className="p-6">
-            {/* AI模式 */}
-            {mode === 'ai' && (
-              <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-gray-700">
-                    💡 输入你的基本信息，AI会根据你的目标生成个性化营养建议
+        <AnimatePresence mode="wait">
+          {/* AI模式 */}
+          {mode === 'ai' && (
+            <motion.div
+              key="ai-mode"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-4"
+            >
+              <Card className="p-4 bg-muted">
+                <div className="flex items-start gap-2">
+                  <Sparkles size={16} className="text-accent mt-0.5 flex-shrink-0" />
+                  <p className="text-body text-primary">
+                    输入你的基本信息，AI会根据你的目标生成个性化营养建议
                   </p>
                 </div>
+              </Card>
 
+              <Card className="p-6 space-y-4">
                 {/* 体重输入 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    体重 (kg)
+                  <label htmlFor="ai-weight" className="block text-body font-medium mb-2">
+                    体重 (kg)<span className="text-accent">*</span>
                   </label>
                   <input
+                    id="ai-weight"
                     type="number"
+                    inputMode="decimal"
                     value={aiInputs.weight}
                     onChange={(e) => setAiInputs({ ...aiInputs, weight: e.target.value })}
                     placeholder="例如：70"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-divider rounded-xl
+                      focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent
+                      transition-all text-body"
                     disabled={loading}
                   />
                 </div>
 
                 {/* 身高输入 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    身高 (cm)
+                  <label htmlFor="ai-height" className="block text-body font-medium mb-2">
+                    身高 (cm)<span className="text-accent">*</span>
                   </label>
                   <input
+                    id="ai-height"
                     type="number"
+                    inputMode="decimal"
                     value={aiInputs.height}
                     onChange={(e) => setAiInputs({ ...aiInputs, height: e.target.value })}
                     placeholder="例如：170"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-divider rounded-xl
+                      focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent
+                      transition-all text-body"
                     disabled={loading}
                   />
                 </div>
 
                 {/* 目标类型选择 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    你的目标
+                  <label className="block text-body font-medium mb-3">
+                    你的目标<span className="text-accent">*</span>
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {goalTypeOptions.map(option => (
-                      <button
-                        key={option.value}
-                        onClick={() => setAiInputs({ ...aiInputs, goalType: option.value })}
-                        className={`p-3 rounded-xl border-2 transition-all ${
-                          aiInputs.goalType === option.value
-                            ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                        disabled={loading}
-                      >
-                        <div className="text-2xl mb-1">{option.emoji}</div>
-                        <div className="text-sm font-medium">{option.label}</div>
-                      </button>
-                    ))}
+                  <div className="grid grid-cols-2 gap-3">
+                    {goalTypeOptions.map(option => {
+                      const isSelected = aiInputs.goalType === option.value;
+                      const Icon = option.Icon;
+                      return (
+                        <button
+                          key={option.value}
+                          onClick={() => setAiInputs({ ...aiInputs, goalType: option.value })}
+                          className={cn(
+                            "p-4 rounded-xl transition-all duration-base",
+                            "flex flex-col items-center justify-center gap-2",
+                            isSelected
+                              ? 'bg-accent text-white shadow-md'
+                              : 'bg-muted text-secondary hover:bg-divider hover:text-primary border border-divider'
+                          )}
+                          disabled={loading}
+                          aria-pressed={isSelected}
+                        >
+                          <Icon size={24} />
+                          <span className="text-body font-medium">{option.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
+              </Card>
 
-                {/* 错误提示 */}
-                {error && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-700">❌ {error}</p>
-                  </div>
+              {/* 错误提示 */}
+              {error && (
+                <Card className="p-4 bg-accent/10 border-accent">
+                  <p className="text-body text-accent" role="alert">
+                    {error}
+                  </p>
+                </Card>
+              )}
+
+              {/* 提交按钮 */}
+              <Button
+                variant="primary"
+                size="large"
+                onClick={handleAiSubmit}
+                disabled={loading}
+                className="w-full"
+              >
+                {loading ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, ease: "linear", repeat: Infinity }}
+                    >
+                      <Sparkles size={20} />
+                    </motion.div>
+                    <span>AI生成中...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={20} />
+                    <span>生成营养目标</span>
+                  </>
                 )}
+              </Button>
+            </motion.div>
+          )}
 
-                {/* 提交按钮 */}
-                <button
-                  onClick={handleAiSubmit}
-                  disabled={loading}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-bold text-lg hover:from-indigo-600 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center space-x-2">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>AI生成中...</span>
-                    </span>
-                  ) : (
-                    '生成营养目标 🚀'
-                  )}
-                </button>
-              </div>
-            )}
-
-            {/* 手动模式 */}
-            {mode === 'manual' && (
-              <div className="space-y-4">
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-gray-700">
-                    ✍️ 根据你的了解，直接输入每日营养目标
+          {/* 手动模式 */}
+          {mode === 'manual' && (
+            <motion.div
+              key="manual-mode"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-4"
+            >
+              <Card className="p-4 bg-muted">
+                <div className="flex items-start gap-2">
+                  <Target size={16} className="text-accent mt-0.5 flex-shrink-0" />
+                  <p className="text-body text-primary">
+                    根据你的了解，直接输入每日营养目标
                   </p>
                 </div>
+              </Card>
 
+              <Card className="p-6 space-y-4">
                 {/* 卡路里 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    每日卡路里目标 (千卡) *
+                  <label htmlFor="manual-calories" className="block text-body font-medium mb-2">
+                    每日卡路里目标 (千卡)<span className="text-accent">*</span>
                   </label>
                   <input
+                    id="manual-calories"
                     type="number"
+                    inputMode="decimal"
                     value={manualGoal.calories}
                     onChange={(e) => setManualGoal({ ...manualGoal, calories: e.target.value })}
                     placeholder="例如：2000"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-divider rounded-xl
+                      focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent
+                      transition-all text-body"
                   />
                 </div>
 
                 {/* 蛋白质 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="manual-protein" className="block text-body font-medium mb-2">
                     蛋白质 (克)
                   </label>
                   <input
+                    id="manual-protein"
                     type="number"
+                    inputMode="decimal"
                     value={manualGoal.protein}
                     onChange={(e) => setManualGoal({ ...manualGoal, protein: e.target.value })}
                     placeholder="例如：100"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-divider rounded-xl
+                      focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent
+                      transition-all text-body"
                   />
                 </div>
 
                 {/* 碳水化合物 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="manual-carbs" className="block text-body font-medium mb-2">
                     碳水化合物 (克)
                   </label>
                   <input
+                    id="manual-carbs"
                     type="number"
+                    inputMode="decimal"
                     value={manualGoal.carbs}
                     onChange={(e) => setManualGoal({ ...manualGoal, carbs: e.target.value })}
                     placeholder="例如：250"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-divider rounded-xl
+                      focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent
+                      transition-all text-body"
                   />
                 </div>
 
                 {/* 脂肪 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="manual-fat" className="block text-body font-medium mb-2">
                     脂肪 (克)
                   </label>
                   <input
+                    id="manual-fat"
                     type="number"
+                    inputMode="decimal"
                     value={manualGoal.fat}
                     onChange={(e) => setManualGoal({ ...manualGoal, fat: e.target.value })}
                     placeholder="例如：65"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-divider rounded-xl
+                      focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent
+                      transition-all text-body"
                   />
                 </div>
+              </Card>
 
-                {/* 错误提示 */}
-                {error && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-700">❌ {error}</p>
-                  </div>
-                )}
+              {/* 错误提示 */}
+              {error && (
+                <Card className="p-4 bg-accent/10 border-accent">
+                  <p className="text-body text-accent" role="alert">
+                    {error}
+                  </p>
+                </Card>
+              )}
 
-                {/* 提交按钮 */}
-                <button
-                  onClick={handleManualSubmit}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-700 transition-all transform hover:scale-105 shadow-lg"
-                >
-                  保存目标 ✅
-                </button>
-              </div>
-            )}
-
-            {/* 高级设置 */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <button
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="w-full flex items-center justify-between py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+              {/* 提交按钮 */}
+              <Button
+                variant="primary"
+                size="large"
+                onClick={handleManualSubmit}
+                className="w-full"
               >
-                <span className="flex items-center">
-                  <span className="mr-2">⚙️</span>
-                  高级设置
-                </span>
-                <span className="text-gray-400">
-                  {showAdvanced ? '▲' : '▼'}
-                </span>
-              </button>
+                <Check size={20} />
+                <span>保存目标</span>
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-              {showAdvanced && (
-                <div className="mt-4 space-y-3">
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                    <p className="text-xs text-gray-700 mb-2">
+        {/* 高级设置 */}
+        <Card className="p-4 mt-4">
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="w-full flex items-center justify-between text-body font-medium hover:text-primary transition-colors"
+          >
+            <span className="text-secondary">高级设置</span>
+            {showAdvanced ? (
+              <ChevronUp size={20} className="text-secondary" />
+            ) : (
+              <ChevronDown size={20} className="text-secondary" />
+            )}
+          </button>
+
+          <AnimatePresence>
+            {showAdvanced && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: [0.4, 0.0, 0.6, 1] }}
+                className="overflow-hidden"
+              >
+                <div className="pt-4 space-y-4">
+                  <div className="bg-muted rounded-lg p-3">
+                    <p className="text-caption text-secondary">
                       🌙 <strong>营养日边界时间：</strong>
                       设置一天的"结束"时间。例如设置为凌晨4点，那么凌晨2点吃的食物会被算作"昨天"。
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-body font-medium mb-3">
                       新一天开始时间
                     </label>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center gap-3 mb-2">
                       <input
                         type="range"
                         min="0"
                         max="23"
                         value={dayBoundary}
                         onChange={(e) => setDayBoundary(parseInt(e.target.value))}
-                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        className="flex-1 h-2 bg-divider rounded-lg appearance-none cursor-pointer
+                          [&::-webkit-slider-thumb]:appearance-none
+                          [&::-webkit-slider-thumb]:w-5
+                          [&::-webkit-slider-thumb]:h-5
+                          [&::-webkit-slider-thumb]:rounded-full
+                          [&::-webkit-slider-thumb]:bg-accent
+                          [&::-webkit-slider-thumb]:cursor-pointer"
                       />
-                      <div className="flex items-center justify-center w-20 py-2 px-3 bg-indigo-100 text-indigo-700 rounded-lg font-bold">
+                      <div className="flex items-center justify-center min-w-[4rem] py-2 px-3 bg-accent text-white rounded-lg font-bold tabular-nums">
                         {dayBoundary}:00
                       </div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      {dayBoundary === 0 && '午夜12点 - 标准日期边界'}
-                      {dayBoundary > 0 && dayBoundary < 6 && `凌晨${dayBoundary}点 - 适合夜猫子 🦉`}
-                      {dayBoundary >= 6 && dayBoundary < 12 && `早上${dayBoundary}点 - 适合早起者 🌅`}
-                      {dayBoundary >= 12 && dayBoundary < 18 && `下午${dayBoundary - 12}点`}
-                      {dayBoundary >= 18 && `晚上${dayBoundary - 12}点`}
+                    <p className="text-caption text-secondary">
+                      {getDayBoundaryDescription(dayBoundary)}
                     </p>
                   </div>
                 </div>
-              )}
-            </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Card>
 
-            {/* 取消按钮 */}
-            <button
-              onClick={handleCancel}
-              className="w-full mt-4 py-3 px-4 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors"
-            >
-              取消
-            </button>
-          </div>
-        </div>
-      </div>
+        {/* 取消按钮 */}
+        <Button
+          variant="secondary"
+          onClick={handleCancel}
+          className="w-full mt-4"
+        >
+          取消
+        </Button>
+      </motion.div>
     </div>
   );
 }
