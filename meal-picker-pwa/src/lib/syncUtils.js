@@ -338,10 +338,10 @@ export const resolveConflict = async (conflictId, resolution, mergedData = null)
 // SYNC OPERATIONS
 // =====================================================
 
-// 本地存储键名（与 storage.js 保持一致）
+// 本地存储键名（与实际应用保持一致）
 const STORAGE_KEYS = {
   RESTAURANTS: 'gimme_food_restaurants',
-  NUTRITION_GOALS: 'gimme_food_nutrition_goals',
+  NUTRITION_GOALS: 'gimmefood_nutrition_goal', // Note: singular, no underscore prefix
   NUTRITION_LOGS: 'gimme_food_nutrition_logs',
   ID_MAPPING: 'gimme_food_id_mapping', // Maps local timestamp IDs to cloud UUIDs
 }
@@ -453,6 +453,49 @@ const transformFromDBFormat = (dbRestaurant) => {
     rejectionCount: 0, // Not stored in DB, reset
     version: dbRestaurant.version || 1,
     updated_at: dbRestaurant.updated_at,
+  }
+}
+
+/**
+ * Transform local nutrition goal data to Supabase format
+ */
+const transformNutritionGoalToDBFormat = (localGoal) => {
+  if (!localGoal) return null
+
+  return {
+    id: localGoal.id || generateUUID(),
+    calories_goal: localGoal.calories || 0,
+    protein_goal: localGoal.protein || 0,
+    carbs_goal: localGoal.carbs || 0,
+    fat_goal: localGoal.fat || 0,
+    fiber_goal: localGoal.fiber || 0,
+    sugar_goal: localGoal.sugar || 0,
+    sodium_goal: localGoal.sodium || 0,
+    goal_type: localGoal.goalType || 'daily',
+    notes: localGoal.notes || null,
+    updated_at: new Date().toISOString(),
+  }
+}
+
+/**
+ * Transform Supabase nutrition goal data to local format
+ */
+const transformNutritionGoalFromDBFormat = (dbGoal) => {
+  if (!dbGoal) return null
+
+  return {
+    id: dbGoal.id,
+    calories: dbGoal.calories_goal || 0,
+    protein: dbGoal.protein_goal || 0,
+    carbs: dbGoal.carbs_goal || 0,
+    fat: dbGoal.fat_goal || 0,
+    fiber: dbGoal.fiber_goal || 0,
+    sugar: dbGoal.sugar_goal || 0,
+    sodium: dbGoal.sodium_goal || 0,
+    goalType: dbGoal.goal_type || 'daily',
+    notes: dbGoal.notes || null,
+    updatedAt: dbGoal.updated_at || new Date().toISOString(),
+    version: dbGoal.version || 1,
   }
 }
 
@@ -699,27 +742,30 @@ export const syncNutritionGoals = async () => {
   // 获取本地数据
   const localData = getLocalData(STORAGE_KEYS.NUTRITION_GOALS)
 
+  // Transform remote data to local format for comparison
+  const remoteDataLocal = remoteData ? transformNutritionGoalFromDBFormat(remoteData) : null
+
   // 决定使用哪个数据
-  let finalData = null
+  let finalDataLocal = null
   let shouldPush = false
 
-  if (!localData && !remoteData) {
+  if (!localData && !remoteDataLocal) {
     // 两边都没有数据
     return { success: true, data: null, message: '无数据需要同步' }
-  } else if (!remoteData) {
+  } else if (!remoteDataLocal) {
     // 本地有，远程没有 → 推送本地到云端
-    finalData = localData
+    finalDataLocal = localData
     shouldPush = true
   } else if (!localData) {
     // 远程有，本地没有 → 拉取到本地
-    finalData = remoteData
-  } else if (detectConflict(localData, remoteData)) {
+    finalDataLocal = remoteDataLocal
+  } else if (detectConflict(localData, remoteDataLocal)) {
     // 检测冲突
     const conflict = await saveConflict(
       'nutrition_goals',
       localData.id,
       localData,
-      remoteData,
+      remoteDataLocal,
       'update_conflict'
     )
 
@@ -731,20 +777,22 @@ export const syncNutritionGoals = async () => {
     }
   } else {
     // 使用远程版本（更新的）
-    finalData = remoteData
+    finalDataLocal = remoteDataLocal
   }
 
   // 推送到云端（如果需要）
-  if (shouldPush) {
+  if (shouldPush && finalDataLocal) {
+    const dbFormat = transformNutritionGoalToDBFormat(finalDataLocal)
+
     const { error: pushError } = await supabase
       .from('nutrition_goals')
       .upsert({
-        ...finalData,
+        ...dbFormat,
         user_id: user.data.user.id,
         device_id: deviceInfo.deviceId,
-        version: (finalData.version || 0) + 1,
+        version: (finalDataLocal.version || 0) + 1,
       }, {
-        onConflict: 'id',
+        onConflict: 'user_id',  // Use user_id conflict since nutrition_goals has unique constraint on user_id
       })
 
     if (pushError) {
@@ -753,16 +801,18 @@ export const syncNutritionGoals = async () => {
     }
   }
 
-  // 保存到本地
-  if (finalData) {
-    saveLocalData(STORAGE_KEYS.NUTRITION_GOALS, finalData)
+  // 保存到本地（使用本地格式）
+  if (finalDataLocal) {
+    saveLocalData(STORAGE_KEYS.NUTRITION_GOALS, finalDataLocal)
   }
 
   await updateDeviceSyncMetadata('full')
 
+  console.log(`✅ 营养目标同步成功${shouldPush ? ' (已推送到云端)' : ''}`)
+
   return {
     success: true,
-    data: finalData,
+    data: finalDataLocal,
     message: '同步成功',
   }
 }
