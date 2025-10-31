@@ -1,0 +1,77 @@
+{
+  "welcome": {
+    "title": "Gimme Food!",
+    "subtitle": "The magic button that eliminates decision fatigue",
+    "features": {
+      "smartRecommendation": {
+        "title": "Smart Recommendations",
+        "description": "Intelligent picks based on your preferences and history"
+      },
+      "eliminateFatigue": {
+        "title": "Eliminate Fatigue",
+        "description": "No more wondering what to eat - one tap solves it all"
+      },
+      "offlineUse": {
+        "title": "Offline Ready",
+        "description": "All data saved locally, works anytime anywhere"
+      }
+    },
+    "actions": {
+      "startSetup": "Get Started",
+      "skipSetup": "Skip for Now"
+    },
+    "privacyNotice": "All data is stored only on your device - completely private"
+  },
+  "setup": {
+    "title": "Add Your First Restaurant",
+    "description": "Let's add some restaurant options to get started with smart recommendations"
+  },
+  "setupComplete": {
+    "title": "Setup Complete!",
+    "description": "Awesome! You've added your first restaurant.\nNow you can start using smart recommendations!",
+    "action": "Start Using"
+  },
+  "form": {
+    "titleAdd": "Add Restaurant",
+    "titleEdit": "Edit Restaurant",
+    "descriptionAdd": "Add a new restaurant option",
+    "descriptionEdit": "Update restaurant information",
+    "fields": {
+      "name": {
+        "label": "Restaurant Name",
+        "placeholder": "e.g., Joe's Pizza",
+        "required": true
+      },
+      "tier": {
+        "label": "Restaurant Tier",
+        "hint": "Tier affects recommendation priority - higher is better"
+      },
+      "mealTypes": {
+        "label": "Meal Types",
+        "hint": "Select which meals this restaurant is good for",
+        "required": true
+      }
+    },
+    "validation": {
+      "nameRequired": "Please enter restaurant name",
+      "mealTypesRequired": "Please select at least one meal type"
+    },
+    "actions": {
+      "submit": "Save",
+      "cancel": "Cancel",
+      "skipAndAdd": "Skip & Add More"
+    }
+  },
+  "list": {
+    "emptyState": {
+      "title": "No restaurants yet",
+      "description": "Add restaurants to get started",
+      "action": "Add Restaurant"
+    },
+    "stats": {
+      "selectionCount": "Selected {{count}} times",
+      "lastSelected": "Last selected",
+      "neverSelected": "Never selected"
+    }
+  }
+}

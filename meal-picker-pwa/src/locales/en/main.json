@@ -1,0 +1,37 @@
+{
+  "appTitle": "Gimme Food!",
+  "tagline": "What do you want to eat?",
+  "greetings": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening",
+    "ready": "Ready to decide?"
+  },
+  "actions": {
+    "randomSelect": "Surprise Me",
+    "randomSelectSubtitle": "Random pick",
+    "cookMyself": "Home Cooked",
+    "manualSelect": "Choose Manually",
+    "addRestaurant": "Add Restaurant"
+  },
+  "mealTypeSelection": {
+    "title": "Select Meal Type",
+    "prompt": "What type of meal do you want?",
+    "promptCooking": "What did you cook?",
+    "recommendedBadge": "Recommended",
+    "recommendedHint": "Recommended {{mealType}} based on current time",
+    "cancel": "Cancel"
+  },
+  "emptyState": {
+    "title": "No restaurants yet",
+    "description": "Add some restaurants to start using smart recommendations",
+    "action": "Add Your First Restaurant"
+  },
+  "loading": {
+    "selecting": "Picking for you...",
+    "pleaseWait": "Please wait"
+  },
+  "homeCooking": {
+    "name": "Home Cooked"
+  }
+}

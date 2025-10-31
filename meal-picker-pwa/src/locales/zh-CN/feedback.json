@@ -1,0 +1,75 @@
+{
+  "result": {
+    "loadingTitle": "正在为你选择...",
+    "noResultTitle": "没有找到合适的餐厅",
+    "noResultDescription": "请添加更多餐厅或调整筛选条件",
+    "selectedFor": "为您选择的 {{mealType}}",
+    "tier": "等级",
+    "selectionCount": "已被选择 {{count}} 次",
+    "actions": {
+      "accept": "就这个了！",
+      "acceptShort": "就这个",
+      "reject": "换一个",
+      "rejectShort": "不喜欢"
+    }
+  },
+  "reselection": {
+    "step1": {
+      "title": "不满意？重新摇号！",
+      "subtitle": "给你一个新的选择",
+      "actionReject": "还是不喜欢"
+    },
+    "step2": {
+      "title": "选择困难？这里有两个选项",
+      "subtitle": "从这两个中选一个吧",
+      "actionReject": "都不喜欢"
+    },
+    "step3": {
+      "title": "最后的选择",
+      "subtitle": "就在这两个之中选吧！",
+      "hint": "真的没有更多选择了"
+    },
+    "actions": {
+      "selectThis": "选这个",
+      "back": "返回主界面"
+    }
+  },
+  "modal": {
+    "title": "用餐体验如何？",
+    "description": "您的反馈将帮助我们更好地推荐",
+    "options": {
+      "great": {
+        "label": "非常满意",
+        "description": "超出预期，非常喜欢"
+      },
+      "good": {
+        "label": "满意",
+        "description": "符合预期，下次还会来"
+      },
+      "ok": {
+        "label": "一般",
+        "description": "还可以，不好不坏"
+      },
+      "bad": {
+        "label": "不满意",
+        "description": "不太喜欢，暂时不想再来"
+      }
+    },
+    "actions": {
+      "submit": "提交反馈",
+      "skipNow": "稍后再说"
+    }
+  },
+  "banner": {
+    "prompt": "对 {{restaurant}} 的用餐体验如何？",
+    "action": "评价一下"
+  },
+  "toast": {
+    "feedbackSubmitted": "反馈已提交，感谢！",
+    "restaurantAdded": "餐厅已添加",
+    "restaurantUpdated": "餐厅已更新",
+    "restaurantDeleted": "餐厅已删除",
+    "dataExported": "数据已导出",
+    "dataImported": "数据已导入"
+  }
+}

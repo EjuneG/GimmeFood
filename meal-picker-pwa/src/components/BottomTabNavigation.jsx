@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Home, Sparkles, BarChart3, Settings } from 'lucide-react';
 import { useApp } from '../hooks/useApp.js';
 import { ActionTypes } from '../constants/index.js';
+import { SyncStatusIndicator } from './SyncStatusIndicator.jsx';
 
 export function BottomTabNavigation() {
   const { state, dispatch } = useApp();
@@ -69,6 +70,11 @@ export function BottomTabNavigation() {
       className="fixed bottom-0 left-0 right-0 bg-surface border-t border-divider z-50 shadow-lg"
       aria-label="主导航"
     >
+      {/* Sync Status Indicator - 紧凑模式 */}
+      <div className="absolute top-2 right-2">
+        <SyncStatusIndicator variant="compact" />
+      </div>
+
       <div className="max-w-md mx-auto flex items-center justify-around h-16 safe-bottom">
         {tabs.map((tab) => {
           const { id, label, Icon, active, special, ariaLabel } = tab;

@@ -1,0 +1,52 @@
+{
+  "buttons": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "close": "Close",
+    "submit": "Submit",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "retry": "Retry",
+    "refresh": "Refresh"
+  },
+  "tiers": {
+    "gang": "Favorite",
+    "top": "Top Tier",
+    "elite": "Premium",
+    "npc": "Regular",
+    "trash": "Avoid"
+  },
+  "tierDescriptions": {
+    "gang": "Absolute favorite",
+    "top": "Excellent choice",
+    "elite": "Quality restaurant",
+    "npc": "Regular option",
+    "trash": "Not preferred"
+  },
+  "mealTypes": {
+    "breakfast": "Breakfast",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "snack": "Snack"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "required": "Required",
+    "optional": "Optional",
+    "or": "or",
+    "and": "and",
+    "recommended": "Recommended"
+  },
+  "aria": {
+    "close": "Close",
+    "menu": "Menu",
+    "navigation": "Navigation",
+    "loading": "Loading"
+  }
+}

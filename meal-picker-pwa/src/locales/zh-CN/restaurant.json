@@ -1,0 +1,77 @@
+{
+  "welcome": {
+    "title": "给我食物!",
+    "subtitle": "消除选择疲劳的神奇按钮",
+    "features": {
+      "smartRecommendation": {
+        "title": "智能推荐",
+        "description": "根据你的喜好和历史记录智能推荐餐厅"
+      },
+      "eliminateFatigue": {
+        "title": "消除疲劳",
+        "description": "再也不用为吃什么而烦恼，一键解决选择困难"
+      },
+      "offlineUse": {
+        "title": "离线使用",
+        "description": "数据保存在本地，随时随地可以使用"
+      }
+    },
+    "actions": {
+      "startSetup": "开始设置",
+      "skipSetup": "稍后设置"
+    },
+    "privacyNotice": "所有数据仅保存在您的设备上，完全隐私安全"
+  },
+  "setup": {
+    "title": "添加第一个餐厅",
+    "description": "让我们先添加一些餐厅选项，开始使用智能推荐"
+  },
+  "setupComplete": {
+    "title": "设置完成！",
+    "description": "太棒了！你已经添加了第一个餐厅。\n现在可以开始使用智能推荐功能了！",
+    "action": "开始使用"
+  },
+  "form": {
+    "titleAdd": "添加餐厅",
+    "titleEdit": "编辑餐厅",
+    "descriptionAdd": "添加新的餐厅选项",
+    "descriptionEdit": "修改餐厅信息",
+    "fields": {
+      "name": {
+        "label": "餐厅名称",
+        "placeholder": "例如: 上海小馄饨",
+        "required": true
+      },
+      "tier": {
+        "label": "餐厅等级",
+        "hint": "等级影响推荐权重，越高优先级越高"
+      },
+      "mealTypes": {
+        "label": "适用餐点",
+        "hint": "选择这家餐厅适合的用餐时间",
+        "required": true
+      }
+    },
+    "validation": {
+      "nameRequired": "请输入餐厅名称",
+      "mealTypesRequired": "请至少选择一种餐点类型"
+    },
+    "actions": {
+      "submit": "保存",
+      "cancel": "取消",
+      "skipAndAdd": "跳过并添加更多"
+    }
+  },
+  "list": {
+    "emptyState": {
+      "title": "还没有餐厅",
+      "description": "添加餐厅来开始使用",
+      "action": "添加餐厅"
+    },
+    "stats": {
+      "selectionCount": "已选 {{count}} 次",
+      "lastSelected": "上次选择",
+      "neverSelected": "从未选择"
+    }
+  }
+}

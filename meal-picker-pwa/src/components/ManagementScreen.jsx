@@ -2,10 +2,11 @@
 // Clean, compact list design with avatars and subtle interactions
 
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Settings as SettingsIcon, Store } from 'lucide-react';
+import { Plus, Edit2, Trash2, Settings as SettingsIcon, Store, LogIn, User } from 'lucide-react';
 import { useRestaurants } from '../hooks/useRestaurants.js';
 import { RestaurantForm } from './RestaurantForm.jsx';
 import { DataManagement } from './DataManagement.jsx';
+import { useSync } from '../contexts/SyncContext.jsx';
 import { TIER_NAMES, MEAL_TYPE_NAMES } from '../utils/storage.js';
 import { Avatar } from './ui/Avatar.jsx';
 import { Button } from './ui/Button.jsx';
@@ -13,9 +14,21 @@ import { Card } from './ui/Card.jsx';
 
 export function ManagementScreen() {
   const { restaurants, deleteRestaurant, updateRestaurant, addRestaurant } = useRestaurants();
+  const {
+    user,
+    promptLogin,
+    logout,
+  } = useSync();
+
   const [currentView, setCurrentView] = useState('list'); // list, add, edit
   const [editingRestaurant, setEditingRestaurant] = useState(null);
   const [showDataManagement, setShowDataManagement] = useState(false);
+
+  const handleLogout = async () => {
+    if (window.confirm('确定要退出登录吗？')) {
+      await logout();
+    }
+  };
 
   // 添加餐厅
   const handleAddRestaurant = () => {
@@ -89,6 +102,30 @@ export function ManagementScreen() {
             <p className="text-caption text-secondary">管理你的餐厅选项相册</p>
           </div>
           <div className="flex gap-2">
+            {/* 登录/退出按钮 */}
+            {user ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 py-2 hover:bg-muted rounded-lg transition-colors"
+                aria-label="退出登录"
+                title={`已登录: ${user.email}`}
+              >
+                <User size={18} className="text-secondary" />
+                <span className="text-sm text-secondary hidden sm:inline">
+                  {user.email?.split('@')[0]}
+                </span>
+              </button>
+            ) : (
+              <button
+                onClick={promptLogin}
+                className="flex items-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all shadow-sm"
+                aria-label="登录"
+              >
+                <LogIn size={18} />
+                <span className="text-sm font-medium">登录</span>
+              </button>
+            )}
+
             <button
               onClick={handleAddRestaurant}
               className="p-2 hover:bg-muted rounded-lg transition-colors"

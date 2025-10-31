@@ -1,0 +1,120 @@
+{
+  "prompt": {
+    "title": "要记录营养信息吗？",
+    "description": "追踪今天的营养摄入，帮助达成健康目标",
+    "actions": {
+      "yes": "记录营养",
+      "skip": "跳过"
+    }
+  },
+  "input": {
+    "title": "记录营养",
+    "restaurant": "餐厅",
+    "mealType": "餐点类型",
+    "description": {
+      "label": "今天吃了什么？",
+      "placeholder": "描述你吃的食物，例如：一碗牛肉面加一份小菜",
+      "hint": "详细描述帮助更准确地分析营养"
+    },
+    "date": {
+      "label": "日期",
+      "today": "今天",
+      "yesterday": "昨天"
+    },
+    "actions": {
+      "analyze": "分析营养",
+      "cancel": "取消"
+    },
+    "validation": {
+      "descriptionRequired": "请描述你吃的食物"
+    }
+  },
+  "result": {
+    "title": "营养分析结果",
+    "analyzing": "正在分析营养成分...",
+    "error": "分析失败，请重试",
+    "nutrients": {
+      "calories": "卡路里",
+      "protein": "蛋白质",
+      "carbs": "碳水化合物",
+      "fat": "脂肪"
+    },
+    "goalProgress": {
+      "title": "今日目标进度",
+      "remaining": "剩余",
+      "exceeded": "超出",
+      "completed": "已完成"
+    },
+    "actions": {
+      "done": "完成",
+      "viewDashboard": "查看仪表板"
+    }
+  },
+  "dashboard": {
+    "title": "营养仪表板",
+    "todayProgress": "今日进度",
+    "weeklyView": "本周概览",
+    "goalSetting": "目标设置",
+    "history": "历史记录",
+    "emptyState": {
+      "title": "还没有营养记录",
+      "description": "开始记录你的饮食来追踪营养摄入",
+      "action": "记录第一餐"
+    },
+    "stats": {
+      "totalMeals": "总记录",
+      "avgCalories": "平均卡路里",
+      "streak": "连续记录天数"
+    }
+  },
+  "goalSetup": {
+    "title": "设置营养目标",
+    "description": "根据你的健康目标设置每日营养摄入量",
+    "fields": {
+      "calories": {
+        "label": "每日卡路里目标",
+        "hint": "建议: 1800-2400 kcal"
+      },
+      "protein": {
+        "label": "蛋白质目标 (克)",
+        "hint": "建议: 50-100g"
+      },
+      "carbs": {
+        "label": "碳水化合物目标 (克)",
+        "hint": "建议: 200-300g"
+      },
+      "fat": {
+        "label": "脂肪目标 (克)",
+        "hint": "建议: 50-80g"
+      }
+    },
+    "presets": {
+      "title": "快速预设",
+      "weightLoss": "减重",
+      "maintain": "保持",
+      "muscleGain": "增肌"
+    },
+    "actions": {
+      "save": "保存目标",
+      "useAI": "AI 智能生成",
+      "cancel": "取消"
+    }
+  },
+  "weeklyView": {
+    "title": "本周营养概览",
+    "days": {
+      "monday": "周一",
+      "tuesday": "周二",
+      "wednesday": "周三",
+      "thursday": "周四",
+      "friday": "周五",
+      "saturday": "周六",
+      "sunday": "周日"
+    },
+    "summary": {
+      "avgCalories": "平均卡路里",
+      "totalMeals": "总记录",
+      "onTrackDays": "达标天数"
+    }
+  }
+}

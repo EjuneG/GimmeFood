@@ -1,0 +1,75 @@
+{
+  "result": {
+    "loadingTitle": "Picking for you...",
+    "noResultTitle": "No suitable restaurant found",
+    "noResultDescription": "Please add more restaurants or adjust your filters",
+    "selectedFor": "Selected for your {{mealType}}",
+    "tier": "Tier",
+    "selectionCount": "Selected {{count}} times",
+    "actions": {
+      "accept": "Let's go!",
+      "acceptShort": "Accept",
+      "reject": "Try another",
+      "rejectShort": "Nope"
+    }
+  },
+  "reselection": {
+    "step1": {
+      "title": "Not satisfied? Let's try again!",
+      "subtitle": "Here's a new option for you",
+      "actionReject": "Still not feeling it"
+    },
+    "step2": {
+      "title": "Can't decide? Here are two options",
+      "subtitle": "Pick one of these two!",
+      "actionReject": "Don't like either"
+    },
+    "step3": {
+      "title": "Final choice",
+      "subtitle": "Choose between these two!",
+      "hint": "Really no more options available"
+    },
+    "actions": {
+      "selectThis": "Pick this",
+      "back": "Back to home"
+    }
+  },
+  "modal": {
+    "title": "How was your meal?",
+    "description": "Your feedback helps us recommend better",
+    "options": {
+      "great": {
+        "label": "Loved it",
+        "description": "Exceeded expectations, highly recommend"
+      },
+      "good": {
+        "label": "Good",
+        "description": "Met expectations, would come again"
+      },
+      "ok": {
+        "label": "Okay",
+        "description": "Acceptable, nothing special"
+      },
+      "bad": {
+        "label": "Not great",
+        "description": "Disappointed, won't return soon"
+      }
+    },
+    "actions": {
+      "submit": "Submit Feedback",
+      "skipNow": "Maybe later"
+    }
+  },
+  "banner": {
+    "prompt": "How was {{restaurant}}?",
+    "action": "Rate it"
+  },
+  "toast": {
+    "feedbackSubmitted": "Feedback submitted, thank you!",
+    "restaurantAdded": "Restaurant added",
+    "restaurantUpdated": "Restaurant updated",
+    "restaurantDeleted": "Restaurant deleted",
+    "dataExported": "Data exported",
+    "dataImported": "Data imported"
+  }
+}

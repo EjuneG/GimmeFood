@@ -1,0 +1,120 @@
+{
+  "prompt": {
+    "title": "Track nutrition?",
+    "description": "Track today's nutrition intake to help reach your health goals",
+    "actions": {
+      "yes": "Track Nutrition",
+      "skip": "Skip"
+    }
+  },
+  "input": {
+    "title": "Track Nutrition",
+    "restaurant": "Restaurant",
+    "mealType": "Meal Type",
+    "description": {
+      "label": "What did you eat?",
+      "placeholder": "Describe your meal, e.g., a bowl of beef noodles with side dishes",
+      "hint": "Detailed description helps with accurate nutrition analysis"
+    },
+    "date": {
+      "label": "Date",
+      "today": "Today",
+      "yesterday": "Yesterday"
+    },
+    "actions": {
+      "analyze": "Analyze Nutrition",
+      "cancel": "Cancel"
+    },
+    "validation": {
+      "descriptionRequired": "Please describe what you ate"
+    }
+  },
+  "result": {
+    "title": "Nutrition Analysis",
+    "analyzing": "Analyzing nutrition...",
+    "error": "Analysis failed, please try again",
+    "nutrients": {
+      "calories": "Calories",
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat"
+    },
+    "goalProgress": {
+      "title": "Today's Progress",
+      "remaining": "Remaining",
+      "exceeded": "Exceeded",
+      "completed": "Completed"
+    },
+    "actions": {
+      "done": "Done",
+      "viewDashboard": "View Dashboard"
+    }
+  },
+  "dashboard": {
+    "title": "Nutrition Dashboard",
+    "todayProgress": "Today's Progress",
+    "weeklyView": "Weekly Overview",
+    "goalSetting": "Goal Setting",
+    "history": "History",
+    "emptyState": {
+      "title": "No nutrition records yet",
+      "description": "Start tracking your meals to monitor nutrition intake",
+      "action": "Track First Meal"
+    },
+    "stats": {
+      "totalMeals": "Total Tracked",
+      "avgCalories": "Avg Calories",
+      "streak": "Day Streak"
+    }
+  },
+  "goalSetup": {
+    "title": "Set Nutrition Goals",
+    "description": "Set daily nutrition targets based on your health goals",
+    "fields": {
+      "calories": {
+        "label": "Daily Calorie Goal",
+        "hint": "Recommended: 1800-2400 kcal"
+      },
+      "protein": {
+        "label": "Protein Goal (grams)",
+        "hint": "Recommended: 50-100g"
+      },
+      "carbs": {
+        "label": "Carbs Goal (grams)",
+        "hint": "Recommended: 200-300g"
+      },
+      "fat": {
+        "label": "Fat Goal (grams)",
+        "hint": "Recommended: 50-80g"
+      }
+    },
+    "presets": {
+      "title": "Quick Presets",
+      "weightLoss": "Weight Loss",
+      "maintain": "Maintain",
+      "muscleGain": "Muscle Gain"
+    },
+    "actions": {
+      "save": "Save Goals",
+      "useAI": "AI Generate",
+      "cancel": "Cancel"
+    }
+  },
+  "weeklyView": {
+    "title": "Weekly Nutrition Overview",
+    "days": {
+      "monday": "Mon",
+      "tuesday": "Tue",
+      "wednesday": "Wed",
+      "thursday": "Thu",
+      "friday": "Fri",
+      "saturday": "Sat",
+      "sunday": "Sun"
+    },
+    "summary": {
+      "avgCalories": "Avg Calories",
+      "totalMeals": "Total Tracked",
+      "onTrackDays": "Days on Track"
+    }
+  }
+}
