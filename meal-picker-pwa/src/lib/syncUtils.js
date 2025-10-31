@@ -345,6 +345,62 @@ const STORAGE_KEYS = {
   NUTRITION_LOGS: 'gimme_food_nutrition_logs',
 }
 
+// Tier mapping: local pinyin -> database Chinese
+const TIER_TO_DB = {
+  'hàng': '夯',
+  'dǐngjí': '顶级',
+  'rénshàngrén': '人上人',
+  'NPC': 'NPC',
+  'lāwánle': '拉完了',
+}
+
+const TIER_FROM_DB = {
+  '夯': 'hàng',
+  '顶级': 'dǐngjí',
+  '人上人': 'rénshàngrén',
+  'NPC': 'NPC',
+  '拉完了': 'lāwánle',
+}
+
+/**
+ * Transform local restaurant data to Supabase format
+ */
+const transformToDBFormat = (localRestaurant) => {
+  return {
+    id: localRestaurant.id,
+    name: localRestaurant.name,
+    tier: TIER_TO_DB[localRestaurant.tier] || localRestaurant.tier,
+    meal_types: localRestaurant.mealTypes || [],
+    weight: localRestaurant.currentWeight || localRestaurant.dynamicWeight || 1.0,
+    last_selected_at: localRestaurant.lastSelected || null,
+    feedback_history: localRestaurant.feedbackHistory || [],
+    // created_at and updated_at will be handled by DB defaults if not provided
+    updated_at: new Date().toISOString(),
+  }
+}
+
+/**
+ * Transform Supabase restaurant data to local format
+ */
+const transformFromDBFormat = (dbRestaurant) => {
+  return {
+    id: dbRestaurant.id,
+    name: dbRestaurant.name,
+    tier: TIER_FROM_DB[dbRestaurant.tier] || dbRestaurant.tier,
+    mealTypes: dbRestaurant.meal_types || [],
+    currentWeight: dbRestaurant.weight || 1.0,
+    dynamicWeight: dbRestaurant.weight || 1.0,
+    originalTier: TIER_FROM_DB[dbRestaurant.tier] || dbRestaurant.tier,
+    lastSelected: dbRestaurant.last_selected_at || null,
+    createdAt: dbRestaurant.created_at || new Date().toISOString(),
+    feedbackHistory: dbRestaurant.feedback_history || [],
+    selectionCount: 0, // Not stored in DB, reset
+    rejectionCount: 0, // Not stored in DB, reset
+    version: dbRestaurant.version || 1,
+    updated_at: dbRestaurant.updated_at,
+  }
+}
+
 /**
  * 从本地存储读取数据
  */
@@ -400,8 +456,11 @@ export const syncRestaurants = async () => {
   // 2. 获取本地数据
   const localData = getLocalData(STORAGE_KEYS.RESTAURANTS) || []
 
-  // 3. 创建映射便于查找
-  const remoteMap = new Map(remoteData.map(r => [r.id, r]))
+  // 3. Transform remote data to local format for comparison
+  const remoteDataLocal = remoteData.map(transformFromDBFormat)
+
+  // 4. 创建映射便于查找
+  const remoteMap = new Map(remoteDataLocal.map(r => [r.id, r]))
   const localMap = new Map(localData.map(r => [r.id, r]))
 
   // 4. 三路合并：本地、远程、冲突
@@ -414,8 +473,9 @@ export const syncRestaurants = async () => {
 
     if (!remoteRecord) {
       // 本地有，远程没有 → 需要上传到云端
+      const dbFormat = transformToDBFormat(localRecord)
       itemsToPush.push({
-        ...localRecord,
+        ...dbFormat,
         user_id: user.data.user.id,
         device_id: deviceInfo.deviceId,
         version: (localRecord.version || 0) + 1,
@@ -442,10 +502,10 @@ export const syncRestaurants = async () => {
   }
 
   // 4b. 处理远程独有的数据（本地没有的）
-  for (const remoteRecord of remoteData) {
-    if (!localMap.has(remoteRecord.id)) {
+  for (const remoteRecordLocal of remoteDataLocal) {
+    if (!localMap.has(remoteRecordLocal.id)) {
       // 远程有，本地没有 → 添加到本地
-      mergedData.push(remoteRecord)
+      mergedData.push(remoteRecordLocal)
     }
   }
 
@@ -493,7 +553,7 @@ export const syncRestaurants = async () => {
     stats: {
       total: mergedData.length,
       pushed: itemsToPush.length,
-      pulled: remoteData.filter(r => !localMap.has(r.id)).length,
+      pulled: remoteDataLocal.filter(r => !localMap.has(r.id)).length,
     }
   }
 }
