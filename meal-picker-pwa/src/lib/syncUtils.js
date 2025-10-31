@@ -514,20 +514,54 @@ export const syncRestaurants = async () => {
   // 3. Transform remote data to local format for comparison
   const remoteDataLocal = remoteData.map(transformFromDBFormat)
 
-  // 4. 创建映射便于查找（使用云端 ID 进行匹配）
+  // 4. Create deduplication maps (by ID and by name)
   const remoteMap = new Map(remoteDataLocal.map(r => [r.id, r]))
-  // For local data, use cloud ID mapping for comparison
+  const remoteByName = new Map(remoteDataLocal.map(r => [r.name.toLowerCase().trim(), r]))
+
   const localMap = new Map(localData.map(r => [getCloudId(r.id), r]))
+  const localByName = new Map(localData.map(r => [r.name.toLowerCase().trim(), r]))
 
   // 4. 三路合并：本地、远程、冲突
   const mergedData = []
   const itemsToPush = []
 
-  // 4a. 处理本地数据
+  // 4a. 处理本地数据 (with deduplication)
+  const processedNames = new Set() // Track which names we've already processed
+
   for (const localRecord of localData) {
     const cloudId = getCloudId(localRecord.id)
-    const remoteRecord = remoteMap.get(cloudId)
+    const normalizedName = localRecord.name.toLowerCase().trim()
 
+    // Skip if we've already processed a restaurant with this name
+    if (processedNames.has(normalizedName)) {
+      console.log(`⚠️ 跳过重复餐厅: ${localRecord.name}`)
+      continue
+    }
+
+    let remoteRecord = remoteMap.get(cloudId)
+
+    // If no ID match, try matching by name (deduplication)
+    if (!remoteRecord) {
+      remoteRecord = remoteByName.get(normalizedName)
+
+      if (remoteRecord) {
+        // Found same restaurant by name! Use cloud version and update ID mapping
+        console.log(`🔗 匹配餐厅 "${localRecord.name}" (本地ID: ${localRecord.id} → 云端ID: ${remoteRecord.id})`)
+
+        // Update ID mapping so future syncs use the same cloud ID
+        const mappingStr = localStorage.getItem(STORAGE_KEYS.ID_MAPPING)
+        const mapping = mappingStr ? JSON.parse(mappingStr) : {}
+        mapping[localRecord.id] = remoteRecord.id
+        localStorage.setItem(STORAGE_KEYS.ID_MAPPING, JSON.stringify(mapping))
+
+        // Use the remote version (it's the authoritative one)
+        mergedData.push(remoteRecord)
+        processedNames.add(normalizedName)
+        continue
+      }
+    }
+
+    // No match by ID or name - this is a new restaurant
     if (!remoteRecord) {
       // 本地有，远程没有 → 需要上传到云端
       const dbFormat = transformToDBFormat(localRecord)
@@ -538,6 +572,7 @@ export const syncRestaurants = async () => {
         version: (localRecord.version || 0) + 1,
       })
       mergedData.push(localRecord)
+      processedNames.add(normalizedName)
     } else if (detectConflict(localRecord, remoteRecord)) {
       // 真正的冲突 → 保存到冲突表
       const conflict = await saveConflict(
@@ -552,17 +587,27 @@ export const syncRestaurants = async () => {
       }
       // 冲突情况下暂时保留本地版本
       mergedData.push(localRecord)
+      processedNames.add(normalizedName)
     } else {
       // 远程版本更新或相同 → 使用远程版本
       mergedData.push(remoteRecord)
+      processedNames.add(normalizedName)
     }
   }
 
-  // 4b. 处理远程独有的数据（本地没有的）
+  // 4b. 处理远程独有的数据（本地没有的，且名字也没重复）
   for (const remoteRecordLocal of remoteDataLocal) {
-    if (!localMap.has(remoteRecordLocal.id)) {
-      // 远程有，本地没有 → 添加到本地
+    const normalizedName = remoteRecordLocal.name.toLowerCase().trim()
+
+    // Skip if we've already processed this restaurant name
+    if (processedNames.has(normalizedName)) {
+      continue
+    }
+
+    if (!localMap.has(remoteRecordLocal.id) && !localByName.has(normalizedName)) {
+      // 远程有，本地没有（ID和名字都不匹配）→ 添加到本地
       mergedData.push(remoteRecordLocal)
+      processedNames.add(normalizedName)
     }
   }
 
