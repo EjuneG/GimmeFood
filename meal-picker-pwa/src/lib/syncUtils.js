@@ -343,6 +343,33 @@ const STORAGE_KEYS = {
   RESTAURANTS: 'gimme_food_restaurants',
   NUTRITION_GOALS: 'gimme_food_nutrition_goals',
   NUTRITION_LOGS: 'gimme_food_nutrition_logs',
+  ID_MAPPING: 'gimme_food_id_mapping', // Maps local timestamp IDs to cloud UUIDs
+}
+
+/**
+ * Get or create cloud UUID for a local ID
+ */
+const getCloudId = (localId) => {
+  // If already a valid UUID, return as-is
+  if (isValidUUID(localId)) {
+    return localId
+  }
+
+  // Check if we have a mapping
+  const mappingStr = localStorage.getItem(STORAGE_KEYS.ID_MAPPING)
+  const mapping = mappingStr ? JSON.parse(mappingStr) : {}
+
+  // If we have a cloud ID for this local ID, return it
+  if (mapping[localId]) {
+    return mapping[localId]
+  }
+
+  // Generate a new UUID and store the mapping
+  const cloudId = generateUUID()
+  mapping[localId] = cloudId
+  localStorage.setItem(STORAGE_KEYS.ID_MAPPING, JSON.stringify(mapping))
+
+  return cloudId
 }
 
 // Tier mapping: local pinyin -> database Chinese
@@ -363,11 +390,39 @@ const TIER_FROM_DB = {
 }
 
 /**
+ * Check if a string is a valid UUID
+ */
+const isValidUUID = (str) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  return uuidRegex.test(str)
+}
+
+/**
+ * Generate a UUID v4
+ */
+const generateUUID = () => {
+  // Use crypto.randomUUID() if available (modern browsers)
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+
+  // Fallback to manual generation
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0
+    const v = c === 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
+}
+
+/**
  * Transform local restaurant data to Supabase format
  */
 const transformToDBFormat = (localRestaurant) => {
+  // Get or create cloud UUID for this restaurant
+  const cloudId = getCloudId(localRestaurant.id)
+
   return {
-    id: localRestaurant.id,
+    id: cloudId,
     name: localRestaurant.name,
     tier: TIER_TO_DB[localRestaurant.tier] || localRestaurant.tier,
     meal_types: localRestaurant.mealTypes || [],
@@ -459,9 +514,10 @@ export const syncRestaurants = async () => {
   // 3. Transform remote data to local format for comparison
   const remoteDataLocal = remoteData.map(transformFromDBFormat)
 
-  // 4. 创建映射便于查找
+  // 4. 创建映射便于查找（使用云端 ID 进行匹配）
   const remoteMap = new Map(remoteDataLocal.map(r => [r.id, r]))
-  const localMap = new Map(localData.map(r => [r.id, r]))
+  // For local data, use cloud ID mapping for comparison
+  const localMap = new Map(localData.map(r => [getCloudId(r.id), r]))
 
   // 4. 三路合并：本地、远程、冲突
   const mergedData = []
@@ -469,7 +525,8 @@ export const syncRestaurants = async () => {
 
   // 4a. 处理本地数据
   for (const localRecord of localData) {
-    const remoteRecord = remoteMap.get(localRecord.id)
+    const cloudId = getCloudId(localRecord.id)
+    const remoteRecord = remoteMap.get(cloudId)
 
     if (!remoteRecord) {
       // 本地有，远程没有 → 需要上传到云端
@@ -536,12 +593,23 @@ export const syncRestaurants = async () => {
       console.error('推送数据失败:', pushError)
       return { success: false, error: pushError }
     }
+
+    // 7. After successful push, update local records to use cloud IDs
+    for (let i = 0; i < mergedData.length; i++) {
+      const localRecord = mergedData[i]
+      const cloudId = getCloudId(localRecord.id)
+
+      // Update the record's ID to match cloud
+      if (localRecord.id !== cloudId) {
+        mergedData[i] = { ...localRecord, id: cloudId }
+      }
+    }
   }
 
-  // 7. 保存合并后的数据到本地
+  // 8. 保存合并后的数据到本地（现在使用云端 UUID）
   saveLocalData(STORAGE_KEYS.RESTAURANTS, mergedData)
 
-  // 8. 更新同步元数据
+  // 9. 更新同步元数据
   await updateDeviceSyncMetadata('full')
 
   console.log(`✅ 同步成功: ${mergedData.length} 条记录 (推送 ${itemsToPush.length} 条)`)
