@@ -120,6 +120,11 @@ export function SyncProvider({ children }) {
         if (!isSilent) {
           console.log('✅ 同步成功')
         }
+
+        // Dispatch event to trigger UI refresh
+        window.dispatchEvent(new CustomEvent('sync-complete', {
+          detail: { type, result }
+        }))
       } else if (result.hasConflicts) {
         setHasConflicts(true)
         setConflicts(result.conflicts || [])

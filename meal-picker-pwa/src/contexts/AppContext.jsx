@@ -267,29 +267,46 @@ export function AppProvider({ children }) {
 
   // 初始化数据
   useEffect(() => {
-    const userData = getUserData();
-    const restaurants = getRestaurants();
-    const pendingFeedback = getPendingFeedback();
-    const nutritionGoal = getNutritionGoal();
+    const loadData = () => {
+      const userData = getUserData();
+      const restaurants = getRestaurants();
+      const pendingFeedback = getPendingFeedback();
+      const nutritionGoal = getNutritionGoal();
 
-    dispatch({ type: ActionTypes.SET_USER_DATA, payload: userData });
-    dispatch({ type: ActionTypes.SET_RESTAURANTS, payload: restaurants });
-    dispatch({ type: ActionTypes.SET_PENDING_FEEDBACK, payload: pendingFeedback });
-    if (nutritionGoal) {
-      dispatch({ type: ActionTypes.SET_NUTRITION_GOAL, payload: nutritionGoal });
-    }
-
-    // 确定初始流程步骤 - 临时跳过欢迎屏幕以测试现代UI
-    // if (userData.isFirstTime || restaurants.length === 0) {
-    //   dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'welcome' });
-    // } else if (shouldShowFeedback()) {
-      dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'main' });
-      if (shouldShowFeedback()) {
-        dispatch({ type: ActionTypes.SET_SHOW_FEEDBACK, payload: true });
+      dispatch({ type: ActionTypes.SET_USER_DATA, payload: userData });
+      dispatch({ type: ActionTypes.SET_RESTAURANTS, payload: restaurants });
+      dispatch({ type: ActionTypes.SET_PENDING_FEEDBACK, payload: pendingFeedback });
+      if (nutritionGoal) {
+        dispatch({ type: ActionTypes.SET_NUTRITION_GOAL, payload: nutritionGoal });
       }
-    // } else {
-    //   dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'main' });
-    // }
+
+      // 确定初始流程步骤 - 临时跳过欢迎屏幕以测试现代UI
+      // if (userData.isFirstTime || restaurants.length === 0) {
+      //   dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'welcome' });
+      // } else if (shouldShowFeedback()) {
+        dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'main' });
+        if (shouldShowFeedback()) {
+          dispatch({ type: ActionTypes.SET_SHOW_FEEDBACK, payload: true });
+        }
+      // } else {
+      //   dispatch({ type: ActionTypes.SET_FLOW_STEP, payload: 'main' });
+      // }
+    };
+
+    // Load data on mount
+    loadData();
+
+    // Listen for sync completion events and reload data
+    const handleSyncComplete = () => {
+      console.log('🔄 检测到同步完成，重新加载数据...');
+      loadData();
+    };
+
+    window.addEventListener('sync-complete', handleSyncComplete);
+
+    return () => {
+      window.removeEventListener('sync-complete', handleSyncComplete);
+    };
   }, []);
 
   // 保存数据到本地存储的副作用
