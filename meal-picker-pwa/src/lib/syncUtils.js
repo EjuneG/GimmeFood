@@ -338,6 +338,13 @@ export const resolveConflict = async (conflictId, resolution, mergedData = null)
 // SYNC OPERATIONS
 // =====================================================
 
+// 本地存储键名（与 storage.js 保持一致）
+const STORAGE_KEYS = {
+  RESTAURANTS: 'gimme_food_restaurants',
+  NUTRITION_GOALS: 'gimme_food_nutrition_goals',
+  NUTRITION_LOGS: 'gimme_food_nutrition_logs',
+}
+
 /**
  * 从本地存储读取数据
  */
@@ -391,7 +398,7 @@ export const syncRestaurants = async () => {
   }
 
   // 2. 获取本地数据
-  const localData = getLocalData('gimme-food-restaurants') || []
+  const localData = getLocalData(STORAGE_KEYS.RESTAURANTS) || []
 
   // 3. 创建映射便于查找
   const remoteMap = new Map(remoteData.map(r => [r.id, r]))
@@ -445,7 +452,7 @@ export const syncRestaurants = async () => {
   // 5. 如果有冲突，返回冲突信息，等待用户解决
   if (conflicts.length > 0) {
     // 即使有冲突，也先保存合并的数据（不含冲突项）
-    saveLocalData('gimme-food-restaurants', mergedData)
+    saveLocalData(STORAGE_KEYS.RESTAURANTS, mergedData)
 
     return {
       success: false,
@@ -472,7 +479,7 @@ export const syncRestaurants = async () => {
   }
 
   // 7. 保存合并后的数据到本地
-  saveLocalData('gimme-food-restaurants', mergedData)
+  saveLocalData(STORAGE_KEYS.RESTAURANTS, mergedData)
 
   // 8. 更新同步元数据
   await updateDeviceSyncMetadata('full')
@@ -517,7 +524,7 @@ export const syncNutritionGoals = async () => {
   }
 
   // 获取本地数据
-  const localData = getLocalData('gimme-food-nutrition-goals')
+  const localData = getLocalData(STORAGE_KEYS.NUTRITION_GOALS)
 
   // 决定使用哪个数据
   let finalData = null
@@ -575,7 +582,7 @@ export const syncNutritionGoals = async () => {
 
   // 保存到本地
   if (finalData) {
-    saveLocalData('gimme-food-nutrition-goals', finalData)
+    saveLocalData(STORAGE_KEYS.NUTRITION_GOALS, finalData)
   }
 
   await updateDeviceSyncMetadata('full')
@@ -619,7 +626,7 @@ export const syncNutritionLogs = async (startDate, endDate) => {
   }
 
   // 获取本地数据
-  const localData = getLocalData('gimme-food-nutrition-logs') || []
+  const localData = getLocalData(STORAGE_KEYS.NUTRITION_LOGS) || []
 
   // 创建映射
   const remoteMap = new Map(remoteData.map(r => [r.id, r]))
@@ -668,7 +675,7 @@ export const syncNutritionLogs = async (startDate, endDate) => {
   }
 
   if (conflicts.length > 0) {
-    saveLocalData('gimme-food-nutrition-logs', mergedData)
+    saveLocalData(STORAGE_KEYS.NUTRITION_LOGS, mergedData)
     return {
       success: false,
       hasConflicts: true,
@@ -692,7 +699,7 @@ export const syncNutritionLogs = async (startDate, endDate) => {
   }
 
   // 保存合并后的数据
-  saveLocalData('gimme-food-nutrition-logs', mergedData)
+  saveLocalData(STORAGE_KEYS.NUTRITION_LOGS, mergedData)
 
   await updateDeviceSyncMetadata('full')
 

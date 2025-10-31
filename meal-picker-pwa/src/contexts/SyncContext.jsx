@@ -191,7 +191,7 @@ export function SyncProvider({ children }) {
     if (user) return false
 
     // 检查本地数据量
-    const restaurantsStr = localStorage.getItem('gimme-food-restaurants')
+    const restaurantsStr = localStorage.getItem('gimme_food_restaurants')
     if (!restaurantsStr) return false
 
     try {
