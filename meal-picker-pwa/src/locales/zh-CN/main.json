@@ -1,0 +1,37 @@
+{
+  "appTitle": "给我食物!",
+  "tagline": "今天想吃什么?",
+  "greetings": {
+    "morning": "早安",
+    "afternoon": "下午好",
+    "evening": "晚上好",
+    "ready": "准备好选择了吗？"
+  },
+  "actions": {
+    "randomSelect": "随机推荐",
+    "randomSelectSubtitle": "Surprise me",
+    "cookMyself": "自己做饭",
+    "manualSelect": "手动选择",
+    "addRestaurant": "添加餐厅"
+  },
+  "mealTypeSelection": {
+    "title": "选择餐点类型",
+    "prompt": "现在想吃什么类型的食物？",
+    "promptCooking": "你做了什么类型的菜？",
+    "recommendedBadge": "推荐",
+    "recommendedHint": "基于当前时间推荐 {{mealType}}",
+    "cancel": "取消"
+  },
+  "emptyState": {
+    "title": "还没有餐厅选项",
+    "description": "添加一些餐厅来开始使用智能推荐",
+    "action": "添加第一家餐厅"
+  },
+  "loading": {
+    "selecting": "正在为你选择...",
+    "pleaseWait": "请稍候"
+  },
+  "homeCooking": {
+    "name": "自己做饭"
+  }
+}

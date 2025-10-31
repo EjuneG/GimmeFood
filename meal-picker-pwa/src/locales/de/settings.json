@@ -1,0 +1,87 @@
+{
+  "title": "Settings & Management",
+  "tabs": {
+    "restaurants": "Restaurants",
+    "data": "Data"
+  },
+  "restaurants": {
+    "title": "My Restaurants",
+    "addButton": "Add Restaurant",
+    "searchPlaceholder": "Search restaurants...",
+    "filterByTier": "Filter by tier",
+    "filterByMealType": "Filter by meal type",
+    "sortBy": "Sort by",
+    "sortOptions": {
+      "name": "Name",
+      "tier": "Tier",
+      "selectionCount": "Times selected",
+      "lastSelected": "Recently selected"
+    },
+    "emptyState": {
+      "title": "No restaurants yet",
+      "description": "Add restaurants to start using smart recommendations",
+      "action": "Add Your First Restaurant"
+    },
+    "stats": {
+      "total": "{{count}} restaurants total",
+      "byTier": "Distribution by tier"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "deleteConfirm": {
+      "title": "Confirm Deletion",
+      "message": "Are you sure you want to delete {{name}}? This action cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    }
+  },
+  "data": {
+    "title": "Data Management",
+    "export": {
+      "title": "Export Data",
+      "description": "Export your restaurant data as JSON file to save locally",
+      "action": "Export Data",
+      "filename": "gimme-food-data.json"
+    },
+    "import": {
+      "title": "Import Data",
+      "description": "Import restaurant data from a local JSON file",
+      "action": "Import Data",
+      "selectFile": "Select File"
+    },
+    "clear": {
+      "title": "Clear All Data",
+      "description": "Delete all restaurants and history (use with caution)",
+      "action": "Clear Data",
+      "confirmTitle": "Confirm Clear",
+      "confirmMessage": "Are you sure you want to clear all data? This action cannot be undone.",
+      "confirm": "Clear All",
+      "cancel": "Cancel"
+    },
+    "weightReset": {
+      "title": "Reset Weights",
+      "description": "Restore all restaurant weights to their original tier weights",
+      "action": "Reset Weights"
+    },
+    "stats": {
+      "title": "Data Statistics",
+      "totalRestaurants": "Total Restaurants",
+      "totalSelections": "Total Selections",
+      "dataSize": "Data Size"
+    }
+  },
+  "language": {
+    "title": "Language",
+    "description": "Select your preferred language",
+    "current": "Current Language",
+    "select": "Select Language"
+  },
+  "about": {
+    "title": "About",
+    "version": "Version",
+    "description": "Gimme Food - The magic button that eliminates decision fatigue",
+    "privacy": "All data is stored locally on your device"
+  }
+}
