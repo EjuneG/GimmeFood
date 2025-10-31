@@ -121,10 +121,22 @@ export function SyncProvider({ children }) {
           console.log('✅ 同步成功')
         }
 
-        // Dispatch event to trigger UI refresh
-        window.dispatchEvent(new CustomEvent('sync-complete', {
-          detail: { type, result }
-        }))
+        // Only dispatch event if data actually changed (pushed or pulled data)
+        const hasDataChanges = result.results
+          ? Object.values(result.results).some(r =>
+              r.stats?.pushed > 0 || r.stats?.pulled > 0 ||
+              (r.data && r.data !== null)  // For nutrition goals
+            )
+          : (result.stats?.pushed > 0 || result.stats?.pulled > 0)
+
+        if (hasDataChanges) {
+          console.log('🔄 数据已更新，触发UI刷新')
+          window.dispatchEvent(new CustomEvent('sync-complete', {
+            detail: { type, result }
+          }))
+        } else if (!isSilent) {
+          console.log('📊 无数据变化，跳过刷新')
+        }
       } else if (result.hasConflicts) {
         setHasConflicts(true)
         setConflicts(result.conflicts || [])

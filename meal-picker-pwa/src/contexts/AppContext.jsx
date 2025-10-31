@@ -267,7 +267,8 @@ export function AppProvider({ children }) {
 
   // 初始化数据
   useEffect(() => {
-    const loadData = () => {
+    // Load data without affecting navigation/flow
+    const loadDataOnly = () => {
       const userData = getUserData();
       const restaurants = getRestaurants();
       const pendingFeedback = getPendingFeedback();
@@ -279,6 +280,13 @@ export function AppProvider({ children }) {
       if (nutritionGoal) {
         dispatch({ type: ActionTypes.SET_NUTRITION_GOAL, payload: nutritionGoal });
       }
+    };
+
+    // Initial load with flow setup
+    const initializeApp = () => {
+      loadDataOnly();
+
+      const userData = getUserData();
 
       // 确定初始流程步骤 - 临时跳过欢迎屏幕以测试现代UI
       // if (userData.isFirstTime || restaurants.length === 0) {
@@ -294,12 +302,12 @@ export function AppProvider({ children }) {
     };
 
     // Load data on mount
-    loadData();
+    initializeApp();
 
-    // Listen for sync completion events and reload data
+    // Listen for sync completion events and reload data (without resetting flow)
     const handleSyncComplete = () => {
       console.log('🔄 检测到同步完成，重新加载数据...');
-      loadData();
+      loadDataOnly(); // Don't reset flow step - stay on current screen
     };
 
     window.addEventListener('sync-complete', handleSyncComplete);
