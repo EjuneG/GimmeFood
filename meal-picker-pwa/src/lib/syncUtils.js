@@ -365,7 +365,7 @@ const saveLocalData = (key, data) => {
 }
 
 /**
- * 同步餐厅数据
+ * 同步餐厅数据 - 双向同步（推送 + 拉取 + 智能合并）
  * @returns {object} { success, conflicts, data }
  */
 export const syncRestaurants = async () => {
@@ -397,12 +397,25 @@ export const syncRestaurants = async () => {
   const remoteMap = new Map(remoteData.map(r => [r.id, r]))
   const localMap = new Map(localData.map(r => [r.id, r]))
 
-  // 4. 检测冲突
+  // 4. 三路合并：本地、远程、冲突
+  const mergedData = []
+  const itemsToPush = []
+
+  // 4a. 处理本地数据
   for (const localRecord of localData) {
     const remoteRecord = remoteMap.get(localRecord.id)
 
-    if (detectConflict(localRecord, remoteRecord)) {
-      // 发现冲突，保存到冲突表
+    if (!remoteRecord) {
+      // 本地有，远程没有 → 需要上传到云端
+      itemsToPush.push({
+        ...localRecord,
+        user_id: user.data.user.id,
+        device_id: deviceInfo.deviceId,
+        version: (localRecord.version || 0) + 1,
+      })
+      mergedData.push(localRecord)
+    } else if (detectConflict(localRecord, remoteRecord)) {
+      // 真正的冲突 → 保存到冲突表
       const conflict = await saveConflict(
         'restaurants',
         localRecord.id,
@@ -410,15 +423,30 @@ export const syncRestaurants = async () => {
         remoteRecord,
         'update_conflict'
       )
-
       if (conflict) {
         conflicts.push(conflict)
       }
+      // 冲突情况下暂时保留本地版本
+      mergedData.push(localRecord)
+    } else {
+      // 远程版本更新或相同 → 使用远程版本
+      mergedData.push(remoteRecord)
+    }
+  }
+
+  // 4b. 处理远程独有的数据（本地没有的）
+  for (const remoteRecord of remoteData) {
+    if (!localMap.has(remoteRecord.id)) {
+      // 远程有，本地没有 → 添加到本地
+      mergedData.push(remoteRecord)
     }
   }
 
   // 5. 如果有冲突，返回冲突信息，等待用户解决
   if (conflicts.length > 0) {
+    // 即使有冲突，也先保存合并的数据（不含冲突项）
+    saveLocalData('gimme-food-restaurants', mergedData)
+
     return {
       success: false,
       hasConflicts: true,
@@ -427,38 +455,63 @@ export const syncRestaurants = async () => {
     }
   }
 
-  // 6. 没有冲突，直接使用远程数据（Supabase as primary）
-  saveLocalData('gimme-food-restaurants', remoteData)
+  // 6. 推送本地新增/修改的数据到云端
+  if (itemsToPush.length > 0) {
+    console.log(`📤 推送 ${itemsToPush.length} 条本地数据到云端...`)
 
-  // 7. 更新同步元数据
-  await updateDeviceSyncMetadata('pull')
+    const { error: pushError } = await supabase
+      .from('restaurants')
+      .upsert(itemsToPush, {
+        onConflict: 'id',
+      })
+
+    if (pushError) {
+      console.error('推送数据失败:', pushError)
+      return { success: false, error: pushError }
+    }
+  }
+
+  // 7. 保存合并后的数据到本地
+  saveLocalData('gimme-food-restaurants', mergedData)
+
+  // 8. 更新同步元数据
+  await updateDeviceSyncMetadata('full')
+
+  console.log(`✅ 同步成功: ${mergedData.length} 条记录 (推送 ${itemsToPush.length} 条)`)
 
   return {
     success: true,
-    data: remoteData,
+    data: mergedData,
     message: '同步成功',
+    stats: {
+      total: mergedData.length,
+      pushed: itemsToPush.length,
+      pulled: remoteData.filter(r => !localMap.has(r.id)).length,
+    }
   }
 }
 
 /**
- * 同步营养目标数据
+ * 同步营养目标数据 - 双向同步
  */
 export const syncNutritionGoals = async () => {
+  const deviceInfo = getDeviceInfo()
   const user = await supabase.auth.getUser()
 
   if (!user.data.user) {
     return { success: false, error: '未登录' }
   }
 
-  // 拉取远程数据
+  // 拉取远程数据 - 使用 maybeSingle() 以处理0或1条记录
   const { data: remoteData, error: fetchError } = await supabase
     .from('nutrition_goals')
     .select('*')
     .eq('user_id', user.data.user.id)
-    .single()
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
-  if (fetchError && fetchError.code !== 'PGRST116') {
-    // PGRST116 = 未找到记录
+  if (fetchError) {
     console.error('拉取营养目标失败:', fetchError)
     return { success: false, error: fetchError }
   }
@@ -466,8 +519,22 @@ export const syncNutritionGoals = async () => {
   // 获取本地数据
   const localData = getLocalData('gimme-food-nutrition-goals')
 
-  // 检测冲突
-  if (localData && remoteData && detectConflict(localData, remoteData)) {
+  // 决定使用哪个数据
+  let finalData = null
+  let shouldPush = false
+
+  if (!localData && !remoteData) {
+    // 两边都没有数据
+    return { success: true, data: null, message: '无数据需要同步' }
+  } else if (!remoteData) {
+    // 本地有，远程没有 → 推送本地到云端
+    finalData = localData
+    shouldPush = true
+  } else if (!localData) {
+    // 远程有，本地没有 → 拉取到本地
+    finalData = remoteData
+  } else if (detectConflict(localData, remoteData)) {
+    // 检测冲突
     const conflict = await saveConflict(
       'nutrition_goals',
       localData.id,
@@ -482,28 +549,51 @@ export const syncNutritionGoals = async () => {
       conflicts: [conflict],
       message: '发现冲突，需要手动解决',
     }
+  } else {
+    // 使用远程版本（更新的）
+    finalData = remoteData
   }
 
-  // 使用远程数据
-  if (remoteData) {
-    saveLocalData('gimme-food-nutrition-goals', remoteData)
+  // 推送到云端（如果需要）
+  if (shouldPush) {
+    const { error: pushError } = await supabase
+      .from('nutrition_goals')
+      .upsert({
+        ...finalData,
+        user_id: user.data.user.id,
+        device_id: deviceInfo.deviceId,
+        version: (finalData.version || 0) + 1,
+      }, {
+        onConflict: 'id',
+      })
+
+    if (pushError) {
+      console.error('推送营养目标失败:', pushError)
+      return { success: false, error: pushError }
+    }
   }
 
-  await updateDeviceSyncMetadata('pull')
+  // 保存到本地
+  if (finalData) {
+    saveLocalData('gimme-food-nutrition-goals', finalData)
+  }
+
+  await updateDeviceSyncMetadata('full')
 
   return {
     success: true,
-    data: remoteData,
+    data: finalData,
     message: '同步成功',
   }
 }
 
 /**
- * 同步营养日志数据
+ * 同步营养日志数据 - 双向同步
  * @param {Date} startDate - 开始日期
  * @param {Date} endDate - 结束日期
  */
 export const syncNutritionLogs = async (startDate, endDate) => {
+  const deviceInfo = getDeviceInfo()
   const user = await supabase.auth.getUser()
 
   if (!user.data.user) {
@@ -531,14 +621,30 @@ export const syncNutritionLogs = async (startDate, endDate) => {
   // 获取本地数据
   const localData = getLocalData('gimme-food-nutrition-logs') || []
 
-  // 检测冲突
-  const conflicts = []
+  // 创建映射
   const remoteMap = new Map(remoteData.map(r => [r.id, r]))
+  const localMap = new Map(localData.map(r => [r.id, r]))
 
+  // 三路合并
+  const mergedData = []
+  const itemsToPush = []
+  const conflicts = []
+
+  // 处理本地数据
   for (const localRecord of localData) {
     const remoteRecord = remoteMap.get(localRecord.id)
 
-    if (detectConflict(localRecord, remoteRecord)) {
+    if (!remoteRecord) {
+      // 本地有，远程没有 → 需要上传
+      itemsToPush.push({
+        ...localRecord,
+        user_id: user.data.user.id,
+        device_id: deviceInfo.deviceId,
+        version: (localRecord.version || 0) + 1,
+      })
+      mergedData.push(localRecord)
+    } else if (detectConflict(localRecord, remoteRecord)) {
+      // 冲突
       const conflict = await saveConflict(
         'nutrition_logs',
         localRecord.id,
@@ -546,12 +652,23 @@ export const syncNutritionLogs = async (startDate, endDate) => {
         remoteRecord,
         'update_conflict'
       )
-
       if (conflict) conflicts.push(conflict)
+      mergedData.push(localRecord)
+    } else {
+      // 使用远程版本
+      mergedData.push(remoteRecord)
+    }
+  }
+
+  // 处理远程独有的数据
+  for (const remoteRecord of remoteData) {
+    if (!localMap.has(remoteRecord.id)) {
+      mergedData.push(remoteRecord)
     }
   }
 
   if (conflicts.length > 0) {
+    saveLocalData('gimme-food-nutrition-logs', mergedData)
     return {
       success: false,
       hasConflicts: true,
@@ -560,14 +677,28 @@ export const syncNutritionLogs = async (startDate, endDate) => {
     }
   }
 
-  // 使用远程数据
-  saveLocalData('gimme-food-nutrition-logs', remoteData)
+  // 推送本地新增的数据
+  if (itemsToPush.length > 0) {
+    const { error: pushError } = await supabase
+      .from('nutrition_logs')
+      .upsert(itemsToPush, {
+        onConflict: 'id',
+      })
 
-  await updateDeviceSyncMetadata('pull')
+    if (pushError) {
+      console.error('推送营养日志失败:', pushError)
+      return { success: false, error: pushError }
+    }
+  }
+
+  // 保存合并后的数据
+  saveLocalData('gimme-food-nutrition-logs', mergedData)
+
+  await updateDeviceSyncMetadata('full')
 
   return {
     success: true,
-    data: remoteData,
+    data: mergedData,
     message: '同步成功',
   }
 }

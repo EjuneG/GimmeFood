@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Cloud, CloudOff, RefreshCw, AlertTriangle } from 'lucide-react'
 import { useSync } from '../contexts/SyncContext'
 
@@ -16,6 +17,29 @@ export function SyncStatusIndicator({ variant = 'compact' }) {
     performSync,
   } = useSync()
 
+  // 状态：控制"刚刚同步"文字是否显示
+  const [showRecentSync, setShowRecentSync] = useState(false)
+
+  // 当同步完成时，显示"刚刚同步"，3秒后隐藏
+  useEffect(() => {
+    if (!isSyncing && lastSyncTime) {
+      const now = new Date()
+      const diff = Math.floor((now - lastSyncTime) / 1000)
+
+      // 只有在3秒内才显示"刚刚同步"
+      if (diff < 3) {
+        setShowRecentSync(true)
+        const timer = setTimeout(() => {
+          setShowRecentSync(false)
+        }, 3000) // 3秒后隐藏
+
+        return () => clearTimeout(timer)
+      } else {
+        setShowRecentSync(false)
+      }
+    }
+  }, [isSyncing, lastSyncTime])
+
   // 格式化最后同步时间
   const formatSyncTime = (time) => {
     if (!time) return ''
@@ -33,7 +57,7 @@ export function SyncStatusIndicator({ variant = 'compact' }) {
   if (variant === 'compact') {
     return (
       <div
-        className="flex items-center gap-1.5 px-2 py-1 rounded-lg cursor-default"
+        className="flex items-center gap-1.5 px-2 py-1 rounded-lg cursor-default transition-all"
         title={
           isLoggedIn
             ? hasConflicts
@@ -50,17 +74,19 @@ export function SyncStatusIndicator({ variant = 'compact' }) {
         {!isLoggedIn ? (
           <CloudOff size={16} className="text-gray-400" />
         ) : hasConflicts ? (
-          <AlertTriangle size={16} className="text-orange-500" />
+          <AlertTriangle size={16} className="text-orange-500 animate-pulse" />
         ) : isSyncing ? (
           <RefreshCw size={16} className="text-blue-500 animate-spin" />
+        ) : showRecentSync ? (
+          <Cloud size={16} className="text-green-500 animate-pulse" />
         ) : (
-          <Cloud size={16} className="text-green-500" />
+          <Cloud size={16} className="text-green-500 opacity-60" />
         )}
 
-        {/* 可选：显示时间（仅在足够空间时） */}
-        {isLoggedIn && lastSyncTime && !isSyncing && (
-          <span className="text-xs text-secondary hidden sm:inline">
-            {formatSyncTime(lastSyncTime)}
+        {/* 可选：显示时间（仅在同步中或刚刚同步时短暂显示） */}
+        {isLoggedIn && (isSyncing || showRecentSync) && (
+          <span className="text-xs text-secondary hidden sm:inline animate-fade-in">
+            {isSyncing ? '同步中...' : '刚刚同步'}
           </span>
         )}
       </div>
